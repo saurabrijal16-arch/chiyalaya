@@ -1,6 +1,22 @@
 <title>ChaLLengErs</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="ChaLLengErs: a free European CV builder that tailors your CV to each job, scores it against ATS checks and exports PDF and DOCX. Works with ChatGPT, Claude and Gemini.">
+<meta name="description" content="ChaLLengErs (Challengers CV) is a free AI CV builder for jobs in Europe. Tailor your CV to any job ad, get an ATS score, cover letters, interview practice and PDF/Word export. No sign-up.">
+<meta name="keywords" content="Challengers, ChaLLengErs, Challengers CV, free CV builder, ATS CV checker, CV maker Europe, resume builder Finland, Lebenslauf, ansioluettelo, AI Apply alternative">
+<meta name="theme-color" content="#c8102e">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ChaLLengErs">
+<meta property="og:title" content="ChaLLengErs – Free AI CV Builder for European Jobs">
+<meta property="og:description" content="Tailor your CV to every job ad, get an ATS score, cover letters and interview practice. Free, no sign-up.">
+<meta property="og:url" content="https://saurabrijal16-arch.github.io/chiyalaya/">
+<meta property="og:image" content="https://saurabrijal16-arch.github.io/chiyalaya/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ChaLLengErs – Free AI CV Builder for European Jobs">
+<meta name="twitter:description" content="Tailor your CV to every job ad, ATS score, cover letters, interview coach. Free.">
+<meta name="twitter:image" content="https://saurabrijal16-arch.github.io/chiyalaya/assets/og.png">
+<!-- google-site-verification: paste the Search Console meta tag here -->
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebApplication", "name": "ChaLLengErs", "alternateName": ["Challengers", "Challengers CV", "Challengers CV Builder"], "url": "https://saurabrijal16-arch.github.io/chiyalaya/", "applicationCategory": "BusinessApplication", "operatingSystem": "Any (web browser)", "inLanguage": "en", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}, "image": "https://saurabrijal16-arch.github.io/chiyalaya/assets/og.png", "description": "Free AI CV builder for European jobs: tailor your CV to any job ad, ATS score, cover letters, CV translation, interview coach, job pipeline and autofill.", "featureList": ["Job-specific CV tailoring", "ATS readiness score", "Cover letter generator", "CV translation", "LinkedIn and PDF/DOCX CV import", "Interview coach and mock interview", "Job search for 18 European countries", "PDF and Word export"]}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is ChaLLengErs?", "acceptedAnswer": {"@type": "Answer", "text": "ChaLLengErs (Challengers CV) is a free AI CV builder and job-application toolkit for jobs in Europe. Paste a job ad and it tailors your CV to it, scores it against ATS rules and exports PDF and Word files."}}, {"@type": "Question", "name": "Is ChaLLengErs really free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. There is no subscription, no sign-up and no paywall. Everything runs in your browser and your data stays on your device."}}, {"@type": "Question", "name": "Will my CV pass ATS systems?", "acceptedAnswer": {"@type": "Answer", "text": "ChaLLengErs builds single-column, text-based CVs with standard headings and checks keyword match, structure, action verbs, numbers and length. No tool can guarantee a pass on every ATS, but these are the rules ATS parsers and recruiters rely on."}}, {"@type": "Question", "name": "Which countries does it support?", "acceptedAnswer": {"@type": "Answer", "text": "Finland, Sweden, Norway, Denmark, Germany, Austria, Switzerland, the Netherlands, Belgium, France, Ireland, the United Kingdom, Spain, Italy, Portugal, Poland and Estonia, plus a general Europass-style format."}}, {"@type": "Question", "name": "Can I use it with ChatGPT, Claude or Gemini?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. ChaLLengErs writes a master prompt you paste into any AI chat, then you paste the answer back to get a formatted, scored CV."}}, {"@type": "Question", "name": "Is ChaLLengErs an AI Apply alternative?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. It covers CV tailoring, cover letters, interview practice, CV translation, LinkedIn import, job search and form autofill for free, without bots that submit applications for you."}}]}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -168,7 +184,7 @@ details summary { cursor: pointer; font-weight: 600; }
 .cv-headline { margin: 0 0 4px; font-size: 15.5px; font-weight: 700; color: var(--cv-accent); }
 .cv-contact { margin: 0; font-size: 12.5px; color: #3c4048; }
 .cv-classic .cv-head { text-align: center; }
-.cv-h { font-size: 15.5px; color: var(--cv-accent); border-bottom: 1px solid var(--cv-accent); margin: 18px 0 6px; padding-bottom: 3px; }
+.cv-h { font-weight: 700; font-size: 15.5px; color: var(--cv-accent); border-bottom: 1px solid var(--cv-accent); margin: 18px 0 6px; padding-bottom: 3px; }
 .cv-classic .cv-h { text-transform: uppercase; letter-spacing: .04em; font-size: 14px; }
 .cv-p { margin: 3px 0; }
 .cv-small { font-size: 12.5px; }
@@ -223,11 +239,23 @@ details summary { cursor: pointer; font-weight: 600; }
 .pipe-tools select { width: auto; padding: 4px 6px; font-size: 13px; }
 @media (max-width: 560px) { .pipe-row { grid-template-columns: 44px minmax(0, 1fr); } .pipe-tools { grid-column: 1 / -1; justify-content: flex-start; } }
 
+/* landing text + FAQ (read by people and search engines) */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+h1.logo { margin: 0; }
+.about { margin-top: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.about h2 { font: 800 22px var(--f-display); margin: 4px 0 0; text-wrap: balance; }
+.about h3 { font: 800 16px var(--f-display); margin: 0 0 4px; }
+.about p { margin: 0; color: var(--muted); max-width: 65ch; }
+.about-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 760px) { .about-grid { grid-template-columns: minmax(0, 1fr); } }
+.faq { border-bottom: 1px solid var(--line); padding: 8px 0; }
+.faq p { margin-top: 6px; }
+
 </style>
 <div class="shell">
   <header class="top">
     <div class="brand">
-      <span class="logo" aria-label="ChaLLengErs">Cha<b>LL</b>eng<b>E</b>rs</span>
+      <h1 class="logo">Cha<b>LL</b>eng<b>E</b>rs<span class="sr-only"> – free AI CV builder for European jobs</span></h1>
       <span class="tag">Your free AI job-application toolkit for Europe: tailored CVs, ATS score, cover letters, translation, interview coach, job pipeline, autofill</span>
     </div>
     <nav class="toplinks">
@@ -529,6 +557,31 @@ details summary { cursor: pointer; font-weight: 600; }
       <p class="fine">ATS readiness is an estimate from widely used rules: keyword match, structure, readability. No tool can guarantee a pass on every system. Every fact on your CV must be true.</p>
     </section>
   </main>
+  <section class="about" aria-labelledby="aboutH">
+    <h2 id="aboutH">Free AI CV builder for jobs in Europe</h2>
+    <div class="about-grid">
+      <div>
+        <h3>Tailor your CV to every job</h3>
+        <p>Paste a job ad from LinkedIn, Indeed, StepStone, Duunitori or any site. ChaLLengErs finds the keywords the applicant tracking system (ATS) looks for, reorders your experience and skills, rewrites weak bullets and shows a live ATS score.</p>
+      </div>
+      <div>
+        <h3>Made for European CVs</h3>
+        <p>CV rules for 18 countries: photo or no photo, date of birth, GDPR clause, page length and date format. Headings in English, German, French, Finnish, Swedish, Dutch, Spanish, Italian, Portuguese and Polish.</p>
+      </div>
+      <div>
+        <h3>Everything after the CV</h3>
+        <p>Cover letters, CV translation, LinkedIn headline and About, interview questions, STAR stories, an AI mock interview, job search across European boards, a job pipeline ranked by fit and one-click form autofill.</p>
+      </div>
+    </div>
+    <h2>Questions</h2>
+    <details class="faq"><summary>What is ChaLLengErs?</summary><p>ChaLLengErs (Challengers CV) is a free AI CV builder and job-application toolkit for jobs in Europe. Paste a job ad and it tailors your CV to it, scores it against ATS rules and exports PDF and Word files.</p></details>
+<details class="faq"><summary>Is ChaLLengErs really free?</summary><p>Yes. There is no subscription, no sign-up and no paywall. Everything runs in your browser and your data stays on your device.</p></details>
+<details class="faq"><summary>Will my CV pass ATS systems?</summary><p>ChaLLengErs builds single-column, text-based CVs with standard headings and checks keyword match, structure, action verbs, numbers and length. No tool can guarantee a pass on every ATS, but these are the rules ATS parsers and recruiters rely on.</p></details>
+<details class="faq"><summary>Which countries does it support?</summary><p>Finland, Sweden, Norway, Denmark, Germany, Austria, Switzerland, the Netherlands, Belgium, France, Ireland, the United Kingdom, Spain, Italy, Portugal, Poland and Estonia, plus a general Europass-style format.</p></details>
+<details class="faq"><summary>Can I use it with ChatGPT, Claude or Gemini?</summary><p>Yes. ChaLLengErs writes a master prompt you paste into any AI chat, then you paste the answer back to get a formatted, scored CV.</p></details>
+<details class="faq"><summary>Is ChaLLengErs an AI Apply alternative?</summary><p>Yes. It covers CV tailoring, cover letters, interview practice, CV translation, LinkedIn import, job search and form autofill for free, without bots that submit applications for you.</p></details>
+  </section>
+
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 </div>
 
@@ -1500,10 +1553,10 @@ ${JSON.stringify(r)}`;
     blocks.forEach((b, i) => {
       if (b.t !== "bullet") close();
       switch (b.t) {
-        case "name": html += `<header class="cv-head">${photo}<div><h1 class="cv-name">${h(b.text)}</h1>`; break;
+        case "name": html += `<header class="cv-head">${photo}<div><div class="cv-name">${h(b.text)}</div>`; break;
         case "headline": html += `<p class="cv-headline">${h(b.text)}</p>`; break;
         case "contact": html += `<p class="cv-contact">${h(b.text)}</p>`; if (!blocks[i + 1] || blocks[i + 1].t !== "contact") html += `</div></header>`; break;
-        case "heading": html += `<h2 class="cv-h">${h(b.text)}</h2>`; break;
+        case "heading": html += `<div class="cv-h">${h(b.text)}</div>`; break;
         case "para": html += `<p class="cv-p${b.small ? " cv-small" : ""}">${h(b.text)}</p>`; break;
         case "entry": html += `<div class="cv-entry"><div class="cv-row"><strong>${h(b.left)}</strong><span>${h(b.right)}</span></div>${b.sub ? `<div class="cv-sub">${h(b.sub)}</div>` : ""}</div>`; break;
         case "bullet": if (!inList) { html += "<ul>"; inList = true; } html += `<li>${h(b.text)}</li>`; break;
@@ -2438,6 +2491,8 @@ ${JSON.stringify(r)}`;
   showTab(state.tab || "job");
   render();
   initPlatform();
+  // installable app + offline use on the public website (not inside claude.ai or file://)
+  if ("serviceWorker" in navigator && location.protocol === "https:" && !P.inClaude) navigator.serviceWorker.register("sw.js").catch(() => {});
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitPaper);
 })();
 

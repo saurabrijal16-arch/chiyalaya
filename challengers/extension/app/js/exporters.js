@@ -101,10 +101,10 @@
     blocks.forEach((b, i) => {
       if (b.t !== "bullet") close();
       switch (b.t) {
-        case "name": html += `<header class="cv-head">${photo}<div><h1 class="cv-name">${h(b.text)}</h1>`; break;
+        case "name": html += `<header class="cv-head">${photo}<div><div class="cv-name">${h(b.text)}</div>`; break;
         case "headline": html += `<p class="cv-headline">${h(b.text)}</p>`; break;
         case "contact": html += `<p class="cv-contact">${h(b.text)}</p>`; if (!blocks[i + 1] || blocks[i + 1].t !== "contact") html += `</div></header>`; break;
-        case "heading": html += `<h2 class="cv-h">${h(b.text)}</h2>`; break;
+        case "heading": html += `<div class="cv-h">${h(b.text)}</div>`; break;
         case "para": html += `<p class="cv-p${b.small ? " cv-small" : ""}">${h(b.text)}</p>`; break;
         case "entry": html += `<div class="cv-entry"><div class="cv-row"><strong>${h(b.left)}</strong><span>${h(b.right)}</span></div>${b.sub ? `<div class="cv-sub">${h(b.sub)}</div>` : ""}</div>`; break;
         case "bullet": if (!inList) { html += "<ul>"; inList = true; } html += `<li>${h(b.text)}</li>`; break;

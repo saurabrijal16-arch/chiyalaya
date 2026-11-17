@@ -13,6 +13,7 @@ const html = readFileSync(join(web, "index.html"), "utf8");
 const css = readFileSync(join(web, "styles.css"), "utf8");
 
 const inlined = html
+  .replace(/^.*data-web-only.*\n/gm, "")
   .replace('<link rel="stylesheet" href="styles.css">', () => `<style>\n${css}\n</style>`)
   .replace(/<script src="(js\/[^"]+)"><\/script>/g, (_, src) => {
     const js = readFileSync(join(web, src), "utf8");
@@ -28,11 +29,11 @@ const head = inlined.match(/<head>([\s\S]*?)<\/head>/)[1]
   .replace(/<meta charset="utf-8">\s*/i, "")
   .replace(/<meta name="viewport"[^>]*>\s*/i, "");
 const body = inlined.match(/<body>([\s\S]*?)<\/body>/)[1];
-writeFileSync(join(root, "dist", "artifact.html"), head.trim() + "\n" + body.trim() + "\n");
+writeFileSync(join(root, "dist", "artifact.html"), head.replace(/<title>[^<]*<\/title>/, "<title>ChaLLengErs</title>").trim() + "\n" + body.trim() + "\n");
 
 // Extension copy
 const appDir = join(root, "extension", "app");
 rmSync(appDir, { recursive: true, force: true });
-cpSync(web, appDir, { recursive: true });
+cpSync(web, appDir, { recursive: true, filter: (src) => !/(sw\.js|robots\.txt|sitemap\.xml|manifest\.webmanifest|og\.png)$/.test(src) });
 
 console.log("Built dist/challengers.html, dist/artifact.html and extension/app/");

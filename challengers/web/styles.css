@@ -161,7 +161,7 @@ details summary { cursor: pointer; font-weight: 600; }
 .cv-headline { margin: 0 0 4px; font-size: 15.5px; font-weight: 700; color: var(--cv-accent); }
 .cv-contact { margin: 0; font-size: 12.5px; color: #3c4048; }
 .cv-classic .cv-head { text-align: center; }
-.cv-h { font-size: 15.5px; color: var(--cv-accent); border-bottom: 1px solid var(--cv-accent); margin: 18px 0 6px; padding-bottom: 3px; }
+.cv-h { font-weight: 700; font-size: 15.5px; color: var(--cv-accent); border-bottom: 1px solid var(--cv-accent); margin: 18px 0 6px; padding-bottom: 3px; }
 .cv-classic .cv-h { text-transform: uppercase; letter-spacing: .04em; font-size: 14px; }
 .cv-p { margin: 3px 0; }
 .cv-small { font-size: 12.5px; }
@@ -215,3 +215,15 @@ details summary { cursor: pointer; font-weight: 600; }
 .pipe-tools { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .pipe-tools select { width: auto; padding: 4px 6px; font-size: 13px; }
 @media (max-width: 560px) { .pipe-row { grid-template-columns: 44px minmax(0, 1fr); } .pipe-tools { grid-column: 1 / -1; justify-content: flex-start; } }
+
+/* landing text + FAQ (read by people and search engines) */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+h1.logo { margin: 0; }
+.about { margin-top: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.about h2 { font: 800 22px var(--f-display); margin: 4px 0 0; text-wrap: balance; }
+.about h3 { font: 800 16px var(--f-display); margin: 0 0 4px; }
+.about p { margin: 0; color: var(--muted); max-width: 65ch; }
+.about-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 760px) { .about-grid { grid-template-columns: minmax(0, 1fr); } }
+.faq { border-bottom: 1px solid var(--line); padding: 8px 0; }
+.faq p { margin-top: 6px; }

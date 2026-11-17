@@ -602,5 +602,7 @@
   showTab(state.tab || "job");
   render();
   initPlatform();
+  // installable app + offline use on the public website (not inside claude.ai or file://)
+  if ("serviceWorker" in navigator && location.protocol === "https:" && !P.inClaude) navigator.serviceWorker.register("sw.js").catch(() => {});
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitPaper);
 })();
