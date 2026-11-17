@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ChaLLengErs</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header><span class="logo">Cha<b>LL</b>eng<b>E</b>rs</span><span class="free">free</span></header>
+  <section id="jobBox">
+    <div class="label">Job on this page</div>
+    <input id="title" placeholder="Job title">
+    <input id="company" placeholder="Company">
+    <div id="meta" class="meta">Reading the page…</div>
+    <div id="match" class="match" hidden></div>
+    <div id="kws" class="chips"></div>
+  </section>
+  <div class="btns">
+    <button id="open" class="primary">Tailor my CV to this job</button>
+    <button id="autofill">Autofill this application form</button>
+    <button id="save">Save job to my pipeline</button>
+    <button id="copy">Copy AI prompt (for ChatGPT / Claude / Gemini)</button>
+    <button id="insert" hidden>Insert prompt into this chat</button>
+  </div>
+  <p class="tip" id="fillNote" hidden></p>
+  <p class="tip" id="tip">Tip: select the job text first if the page has a lot of other content.</p>
+  <script src="app/js/fontmetrics.js"></script>
+  <script src="app/js/data.js"></script>
+  <script src="app/js/engine.js"></script>
+  <script src="app/js/prompt.js"></script>
+  <script src="app/js/exporters.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

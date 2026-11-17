@@ -1,0 +1,21 @@
+:root { --bg: #ffffff; --ink: #111827; --muted: #586273; --line: #d5dbe2; --accent: #c8102e; --good: #0f7a5c; --good-soft: #e3f4ee; --bad: #b42318; --bad-soft: #fde8e6; }
+@media (prefers-color-scheme: dark) { :root { --bg: #161b23; --ink: #e8ecf2; --muted: #9aa5b5; --line: #2b3542; --accent: #ff4d63; --good: #4fd1a5; --good-soft: #10302a; --bad: #ff7b6e; --bad-soft: #3a1a17; color-scheme: dark; } }
+body { width: 360px; margin: 0; padding: 14px; background: var(--bg); color: var(--ink); font: 13px/1.45 "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; gap: 10px; }
+header { display: flex; align-items: baseline; justify-content: space-between; }
+.logo { font: 900 22px/1 "Arial Black", Arial, sans-serif; letter-spacing: -0.02em; }
+.logo b { color: var(--accent); }
+.free { font: 600 11px monospace; color: var(--good); background: var(--good-soft); padding: 3px 8px; border-radius: 999px; }
+section { display: flex; flex-direction: column; gap: 6px; }
+.label { font-weight: 700; }
+input { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; }
+.meta { color: var(--muted); font-size: 12px; }
+.match { font-weight: 700; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { font: 500 11px monospace; padding: 3px 7px; border-radius: 999px; border: 1px solid var(--line); }
+.chip.ok { background: var(--good-soft); color: var(--good); border-color: transparent; }
+.chip.miss { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.btns { display: flex; flex-direction: column; gap: 6px; }
+button { font: 600 13px inherit; font-family: inherit; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+button:focus-visible, input:focus-visible { outline: 2px solid #2f6fed; outline-offset: 1px; }
+.tip { margin: 0; color: var(--muted); font-size: 12px; }

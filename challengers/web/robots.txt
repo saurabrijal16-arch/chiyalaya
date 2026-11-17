@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://saurabrijal16-arch.github.io/chiyalaya/sitemap.xml
