@@ -1,0 +1,1878 @@
+<title>ChaLLengErs</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="ChaLLengErs: a free European CV builder that tailors your CV to each job, scores it against ATS checks and exports PDF and DOCX. Works with ChatGPT, Claude and Gemini.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* ChaLLengErs — two-pane workbench: editor on the left, live A4 sheet + ATS gauge on the right. */
+:root {
+  --bg: #e9edf1;
+  --surface: #ffffff;
+  --surface-2: #f5f7f9;
+  --ink: #111827;
+  --muted: #586273;
+  --line: #d5dbe2;
+  --accent: #c8102e;          /* challenger red */
+  --accent-ink: #ffffff;
+  --accent-soft: #fbe7ea;
+  --good: #0f7a5c; --good-soft: #e3f4ee;
+  --warn: #a15c00; --warn-soft: #fdf1dd;
+  --bad: #b42318;  --bad-soft: #fde8e6;
+  --focus: #2f6fed;
+  --paper: #ffffff; --paper-ink: #16181d;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 8px 24px rgba(16, 24, 40, .08);
+  --f-display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1218; --surface: #161b23; --surface-2: #1c232d; --ink: #e8ecf2; --muted: #9aa5b5; --line: #2b3542;
+    --accent: #ff4d63; --accent-ink: #1a0508; --accent-soft: #3a1720;
+    --good: #4fd1a5; --good-soft: #10302a; --warn: #f5b454; --warn-soft: #34270f; --bad: #ff7b6e; --bad-soft: #3a1a17;
+    --focus: #7aa2ff; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1218; --surface: #161b23; --surface-2: #1c232d; --ink: #e8ecf2; --muted: #9aa5b5; --line: #2b3542;
+  --accent: #ff4d63; --accent-ink: #1a0508; --accent-soft: #3a1720;
+  --good: #4fd1a5; --good-soft: #10302a; --warn: #f5b454; --warn-soft: #34270f; --bad: #ff7b6e; --bad-soft: #3a1a17;
+  --focus: #7aa2ff; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35); color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 var(--f-body); -webkit-font-smoothing: antialiased; }
+.shell { max-width: 1440px; margin: 0 auto; padding-block: 16px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* header */
+.top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.brand { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; min-width: 0; }
+.logo { font: 900 34px/1 var(--f-display); letter-spacing: -0.02em; }
+.logo b { color: var(--accent); font-weight: 900; }
+.tag { color: var(--muted); font-size: 13.5px; }
+.pill-free { font: 500 12px var(--f-mono); color: var(--good); background: var(--good-soft); padding: 5px 10px; border-radius: 999px; display: inline-block; }
+.banner { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; background: var(--warn-soft); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 14px; margin-bottom: 14px; }
+
+/* layout */
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 18px; align-items: start; }
+@media (max-width: 980px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.editor, .output { min-width: 0; }
+.editor { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.output { position: sticky; top: env(safe-area-inset-top, 0px); display: flex; flex-direction: column; gap: 12px; }
+@media (max-width: 980px) { .output { position: static; } }
+
+/* tabs */
+.tabs { display: flex; gap: 2px; padding: 8px 8px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab { appearance: none; border: 0; background: none; color: var(--muted); font: 600 14px var(--f-body); padding: 10px 12px 12px; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; display: inline-flex; gap: 8px; align-items: center; }
+.tab .step { font: 500 11px var(--f-mono); width: 20px; height: 20px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--surface-2); border: 1px solid var(--line); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab[aria-selected="true"] .step { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.panel { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+/* forms */
+label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 13px; min-width: 0; }
+.hint { font-weight: 400; color: var(--muted); font-size: 12.5px; }
+code { font: 12px var(--f-mono); background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+input, select, textarea { font: 14px/1.45 var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+input[type="color"] { padding: 2px; height: 38px; }
+textarea { resize: vertical; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible, .filebtn:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+fieldset { border: 1px solid var(--line); border-radius: var(--r); padding: 12px; margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+legend { font: 800 14px var(--f-display); padding: 0 6px; letter-spacing: .01em; }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.row2.tight { gap: 8px; }
+@media (max-width: 560px) { .row2 { grid-template-columns: minmax(0, 1fr); } .row2.tight { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.row4 { display: grid; grid-template-columns: 1.2fr 1.2fr 1fr auto; gap: 8px; }
+@media (max-width: 560px) { .row4 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.check { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
+.check input { width: auto; }
+.cards { display: flex; flex-direction: column; gap: 10px; }
+.card { border: 1px dashed var(--line); background: var(--surface-2); border-radius: var(--r); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.cardtools { display: flex; gap: 6px; justify-content: flex-end; }
+
+/* buttons */
+.btn { appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: 600 14px var(--f-body); padding: 9px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; white-space: nowrap; }
+.btn:hover { border-color: var(--ink); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.ghost { background: transparent; }
+.btn.small { padding: 6px 10px; font-size: 13px; align-self: flex-start; }
+.btn.tiny { padding: 3px 8px; font-size: 12px; }
+.btn.danger { color: var(--bad); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.filebtn { flex-direction: row; font-weight: 600; }
+.filebtn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+/* chips */
+.chips { display: inline-flex; flex-wrap: wrap; gap: 5px; }
+.chip { font: 500 12px/1.2 var(--f-mono); padding: 4px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink); }
+.chip.req { border-color: var(--accent); color: var(--accent); }
+.chip.opt { border-style: dashed; color: var(--muted); }
+.chip.ok { background: var(--good-soft); border-color: transparent; color: var(--good); }
+.chip.miss { background: var(--bad-soft); border-color: transparent; color: var(--bad); cursor: pointer; }
+.chip.miss:hover { text-decoration: underline; }
+.chip.free { background: var(--good-soft); border-color: transparent; color: var(--good); font-size: 11px; vertical-align: middle; }
+.kw-block h3, .callout h3 { font: 800 16px var(--f-display); margin: 0 0 6px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.callout { border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.callout p { margin: 0; color: var(--muted); }
+.steps { margin: 0; padding-left: 20px; color: var(--muted); }
+.notes { font-size: 13px; color: var(--muted); background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.notes:empty { display: none; }
+.notes ul { margin: 4px 0 0; padding-left: 18px; }
+.notes strong { color: var(--ink); }
+details summary { cursor: pointer; font-weight: 600; }
+.stream { white-space: pre-wrap; font: 12px/1.45 var(--f-mono); background: var(--surface-2); border-radius: 8px; padding: 10px; max-height: 220px; overflow: auto; margin: 0; }
+
+/* score */
+.scorecard { display: flex; gap: 16px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
+@media (max-width: 480px) { .scorecard { flex-direction: column; align-items: flex-start; } }
+.ring { position: relative; width: 108px; height: 108px; flex: none; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 11; }
+.ring-fg { fill: none; stroke: var(--good); stroke-width: 11; stroke-linecap: round; stroke-dasharray: 326.7; stroke-dashoffset: 326.7; transition: stroke-dashoffset .5s ease, stroke .3s; }
+.ring-num { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; font: 900 32px/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.ring-num small { font: 500 11px var(--f-mono); color: var(--muted); }
+.score-text { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.score-label { font: 800 18px var(--f-display); }
+.score-sub { color: var(--muted); font-size: 13px; }
+.kwline { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.mono { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); min-width: 64px; }
+.confirm { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
+.warnings { display: flex; flex-direction: column; gap: 6px; }
+.warn { background: var(--warn-soft); color: var(--ink); border-left: 3px solid var(--warn); border-radius: 6px; padding: 8px 10px; font-size: 13px; }
+.checks { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 14px; }
+.checks ul { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.checks li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; font-size: 13px; }
+.checks .dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.pass { background: var(--good); } .dot.warn { background: var(--warn); } .dot.fail { background: var(--bad); }
+.checks .pts { font: 500 12px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.checks .fix { color: var(--muted); display: block; }
+.changes { background: var(--good-soft); border-radius: var(--r); padding: 10px 14px; font-size: 13px; }
+.changes ul { margin: 4px 0 0; padding-left: 18px; }
+.exportbar { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* paper (the CV itself: always white like printed paper) */
+.paper-wrap { overflow: hidden; border-radius: 6px; }
+.paper { width: 794px; min-height: 1123px; background: var(--paper); color: var(--paper-ink); box-shadow: var(--shadow); transform-origin: top left; padding: 56px 60px; }
+.cv { font: 13.3px/1.42 Arial, Helvetica, "Liberation Sans", sans-serif; color: var(--paper-ink); }
+.cv-head { display: flex; gap: 18px; align-items: flex-start; justify-content: space-between; flex-direction: row-reverse; }
+.cv-head > div { flex: 1; min-width: 0; }
+.cv-photo { width: 92px; height: 104px; object-fit: cover; border-radius: 4px; }
+.cv-name { font-size: 29px; line-height: 1.1; margin: 0 0 4px; font-weight: 700; }
+.cv-modern .cv-name { color: var(--cv-accent); }
+.cv-headline { margin: 0 0 4px; font-size: 15.5px; font-weight: 700; color: var(--cv-accent); }
+.cv-contact { margin: 0; font-size: 12.5px; color: #3c4048; }
+.cv-classic .cv-head { text-align: center; }
+.cv-h { font-size: 15.5px; color: var(--cv-accent); border-bottom: 1px solid var(--cv-accent); margin: 18px 0 6px; padding-bottom: 3px; }
+.cv-classic .cv-h { text-transform: uppercase; letter-spacing: .04em; font-size: 14px; }
+.cv-p { margin: 3px 0; }
+.cv-small { font-size: 12.5px; }
+.cv-entry { margin-top: 8px; }
+.cv-row { display: flex; justify-content: space-between; gap: 12px; }
+.cv-row span { white-space: nowrap; color: #3c4048; }
+.cv-sub { font-size: 12.3px; color: #555a63; }
+.cv ul { margin: 3px 0 0; padding-left: 18px; }
+.cv li { margin: 1px 0; }
+.cv-gdpr { font-size: 10.5px; color: #666; margin-top: 18px; }
+.cv-compact { font-size: 12.6px; line-height: 1.36; }
+.cv-compact .cv-h { margin-top: 13px; }
+.fine { font-size: 12px; color: var(--muted); margin: 0; }
+
+/* apply */
+.kit { display: flex; flex-wrap: wrap; gap: 6px; }
+.kit .btn { font-size: 12.5px; padding: 6px 10px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.track { display: flex; flex-direction: column; gap: 6px; }
+.track-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; border-bottom: 1px solid var(--line); padding: 6px 0; font-size: 13.5px; }
+.track-row .date { font: 500 11px var(--f-mono); color: var(--muted); }
+.track-row select { width: auto; padding: 4px 6px; font-size: 13px; }
+.empty { color: var(--muted); font-size: 13px; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; box-shadow: var(--shadow); z-index: 20; max-width: calc(100% - 32px); }
+
+@media (prefers-reduced-motion: reduce) { .ring-fg { transition: none; } }
+
+</style>
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-label="ChaLLengErs">Cha<b>LL</b>eng<b>E</b>rs</span>
+      <span class="tag">Free CV builder for European jobs · tailored to each job ad · checked against ATS rules</span>
+    </div>
+    <nav class="toplinks">
+      <span class="pill-free">100% free · no sign-up · your data stays in your browser</span>
+    </nav>
+  </header>
+
+  <div id="exampleBanner" class="banner" hidden>
+    <span>You are looking at an <strong>example</strong> (Alex Example, a sample job ad). Replace it with your own details.</span>
+    <button type="button" class="btn small ghost" id="startBlank">Start blank</button>
+  </div>
+
+  <main class="grid">
+    <!-- LEFT: editor -->
+    <section class="editor" aria-label="Editor">
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" class="tab" data-tab="job" aria-selected="true"><span class="step">1</span>Job</button>
+        <button type="button" role="tab" class="tab" data-tab="you"><span class="step">2</span>You</button>
+        <button type="button" role="tab" class="tab" data-tab="ai"><span class="step">3</span>Tailor &amp; AI</button>
+        <button type="button" role="tab" class="tab" data-tab="design"><span class="step">4</span>Design</button>
+        <button type="button" role="tab" class="tab" data-tab="apply"><span class="step">5</span>Apply</button>
+      </div>
+
+      <!-- JOB -->
+      <div class="panel" data-panel="job">
+        <div class="row2">
+          <label>Job title<input id="jobTitle" placeholder="e.g. Junior Data Analyst"></label>
+          <label>Company<input id="jobCompany" placeholder="e.g. Nordlys Analytics"></label>
+        </div>
+        <div class="row2">
+          <label>Country of the job<select id="country"></select></label>
+          <label>CV language<select id="lang"></select></label>
+        </div>
+        <label>Job ad <span class="hint">Paste the full text, including requirements.</span>
+          <textarea id="jobText" rows="12" placeholder="Paste the job advertisement here…"></textarea>
+        </label>
+        <div id="countryNotes" class="notes"></div>
+        <div class="kw-block">
+          <h3>What the ATS will look for</h3>
+          <p class="hint">Keywords pulled from the ad. <span class="chip req">required</span> <span class="chip opt">nice to have</span></p>
+          <div id="jobKeywords" class="chips"></div>
+        </div>
+      </div>
+
+      <!-- YOU -->
+      <div class="panel" data-panel="you" hidden>
+        <fieldset>
+          <legend>Contact</legend>
+          <div class="row2">
+            <label>Full name<input data-b="name"></label>
+            <label>Headline / current title<input data-b="headline" placeholder="e.g. Business Analytics Student"></label>
+            <label>Email<input data-b="email" type="email"></label>
+            <label>Phone<input data-b="phone"></label>
+            <label>City, Country<input data-b="location"></label>
+            <label>LinkedIn<input data-b="linkedin"></label>
+            <label>Website / GitHub / portfolio<input data-b="website"></label>
+            <label>Work authorization<input data-b="workAuth" placeholder="e.g. EU citizen · or · Residence permit, no sponsorship needed"></label>
+            <label>Nationality <span class="hint">optional</span><input data-b="nationality"></label>
+            <label>Date of birth <span class="hint">optional</span><input data-b="dob" placeholder="DD.MM.YYYY"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Summary</legend>
+          <textarea id="summary" rows="4" placeholder="2–4 lines. Leave empty and “Instant tailor” writes a draft from your real skills."></textarea>
+        </fieldset>
+        <fieldset>
+          <legend>Work experience</legend>
+          <div id="expList" class="cards"></div>
+          <button type="button" class="btn small ghost" data-add="experience">+ Add job</button>
+        </fieldset>
+        <fieldset>
+          <legend>Education</legend>
+          <div id="eduList" class="cards"></div>
+          <button type="button" class="btn small ghost" data-add="education">+ Add education</button>
+        </fieldset>
+        <fieldset>
+          <legend>Skills <span class="hint">One line per group: <code>Data: SQL, Python, Excel</code></span></legend>
+          <textarea id="skills" rows="4"></textarea>
+        </fieldset>
+        <div class="row2">
+          <fieldset>
+            <legend>Languages <span class="hint"><code>Finnish — B1</code></span></legend>
+            <textarea id="languages" rows="3"></textarea>
+          </fieldset>
+          <fieldset>
+            <legend>Certifications <span class="hint"><code>Name | 2025</code></span></legend>
+            <textarea id="certifications" rows="3"></textarea>
+          </fieldset>
+        </div>
+        <fieldset>
+          <legend>Projects</legend>
+          <div id="projList" class="cards"></div>
+          <button type="button" class="btn small ghost" data-add="projects">+ Add project</button>
+        </fieldset>
+        <fieldset>
+          <legend>Interests <span class="hint">optional, one line</span></legend>
+          <input id="interests" placeholder="e.g. Trail running, volunteering at Helsinki Food Bank">
+        </fieldset>
+        <fieldset>
+          <legend>Old CV or extra notes <span class="hint">Only sent to AI. Paste anything: old CV, achievements, numbers.</span></legend>
+          <textarea id="rawResume" rows="5" placeholder="Paste your current CV text or LinkedIn 'About' here. The AI uses it as a source of facts."></textarea>
+        </fieldset>
+        <div class="btnrow">
+          <button type="button" class="btn ghost" id="saveProfile">Save profile file (.json)</button>
+          <label class="btn ghost filebtn">Load profile file<input type="file" id="loadProfile" accept=".json,application/json"></label>
+        </div>
+      </div>
+
+      <!-- AI -->
+      <div class="panel" data-panel="ai" hidden>
+        <div class="callout">
+          <h3>Instant tailor <span class="chip free">free · offline</span></h3>
+          <p>Moves your most relevant bullets to the top, puts matching skills first, replaces weak openers like “Responsible for” and drafts a summary. It only uses facts you entered and never adds skills you don't have.</p>
+          <div class="btnrow"><button type="button" class="btn primary" id="tailorBtn">Tailor my CV to this job</button><button type="button" class="btn ghost" id="undoBtn" disabled>Undo</button></div>
+        </div>
+
+        <div class="callout" id="claudeHere" hidden>
+          <h3>Rewrite with Claude, right here <span class="chip free">uses your claude.ai account</span></h3>
+          <p>Claude rewrites the whole CV with the ChaLLengErs master prompt and loads the result into the editor. The first time, Claude asks you to allow it.</p>
+          <div class="btnrow"><button type="button" class="btn primary" id="claudeBtn">Write my CV with Claude</button><button type="button" class="btn ghost" id="claudeStop" hidden>Stop</button></div>
+          <pre id="claudeOut" class="stream" hidden></pre>
+        </div>
+
+        <div class="callout">
+          <h3>Use any free AI chat <span class="chip free">ChatGPT · Claude · Gemini · Le Chat</span></h3>
+          <ol class="steps">
+            <li>Add your own instructions (optional).</li>
+            <li>Copy the master prompt and paste it into any AI chat.</li>
+            <li>Paste the AI's answer back below. ChaLLengErs loads it, scores it and exports PDF/DOCX.</li>
+          </ol>
+          <label>Your instructions <span class="hint">e.g. “Focus on leadership. Keep it to one page. I'm switching from hospitality to data.”</span>
+            <textarea id="instructions" rows="3"></textarea>
+          </label>
+          <div class="row2">
+            <label>The AI should answer as<select id="outputFmt"><option value="json">JSON to paste back here (recommended)</option><option value="text">Finished text to copy directly</option></select></label>
+            <label class="check"><input type="checkbox" id="coverLetter"> Also write a cover letter</label>
+          </div>
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="copyPrompt">Copy master prompt</button>
+            <a class="btn ghost" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT ↗</a>
+            <a class="btn ghost" href="https://claude.ai/new" target="_blank" rel="noopener">Claude ↗</a>
+            <a class="btn ghost" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini ↗</a>
+            <a class="btn ghost" href="https://chat.mistral.ai/chat" target="_blank" rel="noopener">Le Chat ↗</a>
+          </div>
+          <details><summary>Show the prompt</summary><textarea id="promptBox" rows="10" readonly></textarea></details>
+          <label>Paste the AI's answer<textarea id="aiAnswer" rows="6" placeholder='Paste the whole reply (the ```json … ``` block) here'></textarea></label>
+          <div class="btnrow"><button type="button" class="btn primary" id="importAI">Load AI result into my CV</button></div>
+          <div id="aiNotes" class="notes"></div>
+        </div>
+
+        <div class="callout">
+          <h3>Cover letter</h3>
+          <div class="btnrow"><button type="button" class="btn ghost" id="draftCover">Draft from my CV (free)</button><button type="button" class="btn ghost" id="copyCover">Copy</button><button type="button" class="btn ghost" id="dlCover">Download .txt</button></div>
+          <textarea id="coverText" rows="10" placeholder="Your cover letter appears here. Edit freely."></textarea>
+        </div>
+      </div>
+
+      <!-- DESIGN -->
+      <div class="panel" data-panel="design" hidden>
+        <div class="row2">
+          <label>Template<select id="template"><option value="modern">Modern (left-aligned)</option><option value="classic">Classic (centered)</option><option value="compact">Compact (fits more on a page)</option></select></label>
+          <label>Accent colour<input type="color" id="accent" value="#1f3a5f"></label>
+          <label>Section order<select id="order"><option value="auto">Automatic</option><option value="experience">Experience first</option><option value="education">Education first (students)</option></select></label>
+        </div>
+        <fieldset>
+          <legend>Personal details <span class="hint">Follow the country notes. Leaving these out is the safest choice.</span></legend>
+          <label class="check"><input type="checkbox" id="showPhoto"> Show photo</label>
+          <label class="btn ghost small filebtn">Upload photo<input type="file" id="photoFile" accept="image/*"></label>
+          <label class="check"><input type="checkbox" id="showDob"> Show date of birth</label>
+          <label class="check"><input type="checkbox" id="showNationality"> Show nationality</label>
+          <label class="check"><input type="checkbox" id="gdpr"> Add GDPR consent clause</label>
+        </fieldset>
+        <div class="notes">All templates are single-column, use standard headings and a standard font, and export real text (not images), which is what ATS parsers need.</div>
+      </div>
+
+      <!-- APPLY -->
+      <div class="panel" data-panel="apply" hidden>
+        <div class="callout">
+          <h3>Apply kit</h3>
+          <p>Click to copy, then paste into the employer's application form. Faster than retyping, and safer than auto-apply bots, which can get your account flagged.</p>
+          <div id="kit" class="kit"></div>
+        </div>
+        <div class="callout">
+          <h3>My applications</h3>
+          <form id="trackForm" class="row4">
+            <input id="tCompany" placeholder="Company" required>
+            <input id="tRole" placeholder="Role" required>
+            <select id="tStatus"><option>Saved</option><option>Applied</option><option>Interview</option><option>Offer</option><option>Rejected</option></select>
+            <button class="btn primary" type="submit">Add</button>
+          </form>
+          <button type="button" class="btn small ghost" id="trackCurrent">+ Add current job</button>
+          <div id="trackList" class="track"></div>
+        </div>
+        <div class="callout" id="bookmarkletBox" hidden>
+          <h3>Grab job ads from any site</h3>
+          <p>Drag this button to your bookmarks bar. On LinkedIn, Indeed, Duunitori, StepStone or any job page, select the ad text (or nothing) and click it. The ad opens here, ready to tailor.</p>
+          <a id="bookmarklet" class="btn primary" href="#">＋ Send to ChaLLengErs</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: score + preview -->
+    <section class="output" aria-label="Result">
+      <div class="scorecard">
+        <div class="ring" id="ring" role="img" aria-label="ATS score"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring-fg" id="ringFg"/></svg><div class="ring-num"><span id="scoreNum">0</span><small>/100</small></div></div>
+        <div class="score-text">
+          <div class="score-label" id="scoreLabel">ATS readiness</div>
+          <div class="score-sub" id="scoreSub"></div>
+          <div class="kwline"><span class="mono">Matched</span> <span id="kwMatched" class="chips"></span></div>
+          <div class="kwline"><span class="mono">Missing</span> <span id="kwMissing" class="chips"></span></div>
+          <div id="addSkill" class="confirm" hidden></div>
+        </div>
+      </div>
+      <div id="warnings" class="warnings"></div>
+      <details class="checks"><summary>Score breakdown</summary><ul id="checkList"></ul></details>
+      <div id="changes" class="changes" hidden></div>
+
+      <div class="exportbar">
+        <button type="button" class="btn primary" id="dlPdf">Download PDF</button>
+        <button type="button" class="btn ghost" id="dlDocx">Word (.docx)</button>
+        <button type="button" class="btn ghost" id="dlTxt">Text (.txt)</button>
+        <button type="button" class="btn ghost" id="copyTxt">Copy text</button>
+      </div>
+      <div class="paper-wrap" id="paperWrap"><div class="paper" id="paper"></div></div>
+      <p class="fine">ATS readiness is an estimate from widely used rules: keyword match, structure, readability. No tool can guarantee a pass on every system. Every fact on your CV must be true.</p>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</div>
+
+<template id="tplExp">
+  <div class="card">
+    <div class="row2">
+      <label>Job title<input data-f="title"></label>
+      <label>Company<input data-f="company"></label>
+      <label>Location<input data-f="location"></label>
+      <div class="row2 tight"><label>Start<input data-f="start" placeholder="MM/YYYY"></label><label>End<input data-f="end" placeholder="MM/YYYY or Present"></label></div>
+    </div>
+    <label>Achievements <span class="hint">one per line · start with a verb · add numbers</span><textarea data-f="bullets" rows="4"></textarea></label>
+    <div class="cardtools"><button type="button" class="btn tiny ghost" data-up>↑</button><button type="button" class="btn tiny ghost" data-down>↓</button><button type="button" class="btn tiny danger" data-del>Remove</button></div>
+  </div>
+</template>
+<template id="tplEdu">
+  <div class="card">
+    <div class="row2">
+      <label>Degree / qualification<input data-f="degree"></label>
+      <label>School<input data-f="school"></label>
+      <label>Location<input data-f="location"></label>
+      <div class="row2 tight"><label>Start<input data-f="start" placeholder="MM/YYYY"></label><label>End<input data-f="end" placeholder="MM/YYYY"></label></div>
+    </div>
+    <label>Details <span class="hint">thesis, relevant courses, GPA, honours</span><input data-f="details"></label>
+    <div class="cardtools"><button type="button" class="btn tiny ghost" data-up>↑</button><button type="button" class="btn tiny ghost" data-down>↓</button><button type="button" class="btn tiny danger" data-del>Remove</button></div>
+  </div>
+</template>
+<template id="tplProj">
+  <div class="card">
+    <div class="row2">
+      <label>Project name<input data-f="name"></label>
+      <label>Link<input data-f="link"></label>
+    </div>
+    <label>What you did and the result <span class="hint">one per line</span><textarea data-f="bullets" rows="3"></textarea></label>
+    <div class="cardtools"><button type="button" class="btn tiny ghost" data-up>↑</button><button type="button" class="btn tiny ghost" data-down>↓</button><button type="button" class="btn tiny danger" data-del>Remove</button></div>
+  </div>
+</template>
+
+<script>
+/* Helvetica / Helvetica-Bold advance widths (WinAnsi 32-255, 1/1000 em), measured from metric-compatible Liberation Sans. */
+(function(){const CH=(window.CH=window.CH||{});CH.FONT_W={"R":[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,750,556,0,222,556,333,1000,556,556,333,1000,667,333,1000,0,611,0,0,222,222,333,333,350,556,1000,333,1000,500,333,944,0,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,0,737,552,400,549,333,333,333,576,537,333,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,549,611,556,556,556,556,500,556,500],"B":[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,750,556,0,278,556,500,1000,556,556,333,1000,667,333,1000,0,611,0,0,278,278,500,500,350,556,1000,333,1000,556,333,944,0,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,0,737,552,400,549,333,333,333,576,556,333,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,549,611,611,611,611,611,556,611,556]};})();
+
+</script>
+<script>
+/* ChaLLengErs — static data: European CV conventions, headings, skills, verbs.
+   Country notes describe common practice, not law. Always check the job ad. */
+(function () {
+  const CH = (window.CH = window.CH || {});
+
+  CH.COUNTRIES = {
+    EU: { name: "Europe (general / Europass)", lang: "en", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [
+        "Reverse-chronological order, most recent role first.",
+        "Use MM/YYYY dates and give a CEFR level for every language (A1–C2, or Native).",
+        "Photo, date of birth and marital status are optional. Leaving them out is safest for ATS and fairness.",
+        "Non-EU candidates: state your work permit or residence status clearly." ] },
+    FI: { name: "Finland", lang: "en", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [
+        "Finnish CVs (ansioluettelo) are factual and modest. Cut hype words and let numbers speak.",
+        "Give your Finnish and Swedish level honestly (e.g. Finnish B1). Many roles ask for Finnish, so show any level you have.",
+        "A professional photo is fairly common but never required.",
+        "Non-EU candidates: state residence permit / right to work (e.g. 'Residence permit for work, no sponsorship needed').",
+        "A short personal profile and a one-line interests section are often appreciated." ] },
+    SE: { name: "Sweden", lang: "en", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [
+        "Keep it concise and team-oriented. Swedish recruiters value collaboration and results equally.",
+        "Photo optional. Personal number, age and marital status should be left out.",
+        "Show Swedish level (CEFR) if the role is customer-facing." ] },
+    NO: { name: "Norway", lang: "en", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [ "Direct, factual tone. 1–2 pages.", "Show Norwegian/Scandinavian language level if you have it.", "Photo optional." ] },
+    DK: { name: "Denmark", lang: "en", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [ "Short, honest, personal profile at the top is common.", "Photo optional but fairly common.", "Show Danish level if any." ] },
+    DE: { name: "Germany", lang: "de", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [
+        "Lebenslauf: tabular, complete and precise. Use exact MM/YYYY dates and explain gaps over 3 months.",
+        "Photo is traditional but optional and cannot legally be required (AGG anti-discrimination law).",
+        "Date of birth and nationality are optional; many candidates now leave them out.",
+        "Add place and date at the bottom only if the employer expects a signed CV." ] },
+    AT: { name: "Austria", lang: "de", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [ "Similar to Germany: precise dates, complete timeline.", "Photo still common but optional." ] },
+    CH: { name: "Switzerland", lang: "de", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [ "Very complete and precise. State your work permit type (B, C, G) if you are not Swiss.", "Photo common but optional.", "Mention German/French/Italian levels clearly." ] },
+    NL: { name: "Netherlands", lang: "en", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [ "Direct and concrete. Results over adjectives.", "Photo optional.", "English CVs are widely accepted, especially in tech." ] },
+    BE: { name: "Belgium", lang: "en", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [ "Show French/Dutch/German language levels: multilingualism is a big plus.", "Photo optional." ] },
+    FR: { name: "France", lang: "fr", photo: "optional", pages: "1", dateStyle: "num", gdpr: false,
+      notes: [ "One page is the norm for juniors, two for experienced profiles.", "Photo is optional and becoming less common.", "Add a short 'Langues' section with levels." ] },
+    IE: { name: "Ireland", lang: "en", photo: "no", pages: "2", dateStyle: "word", gdpr: false,
+      notes: [ "No photo, date of birth or marital status.", "Two pages is standard. 'CV', not 'résumé'." ] },
+    UK: { name: "United Kingdom", lang: "en", photo: "no", pages: "2", dateStyle: "word", gdpr: false,
+      notes: [
+        "No photo, date of birth or marital status (Equality Act 2010 makes this standard practice).",
+        "Two pages is normal. Use UK spelling (organise, analyse, programme).",
+        "Non-UK candidates: state visa / right-to-work status." ] },
+    ES: { name: "Spain", lang: "es", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [ "Photo still common but optional.", "Show Spanish level clearly.", "1–2 pages." ] },
+    IT: { name: "Italy", lang: "it", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: true,
+      notes: [ "A GDPR consent line at the bottom is widely expected in Italy (added automatically).", "Europass format is very common.", "Photo optional." ] },
+    PT: { name: "Portugal", lang: "pt", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [ "Europass is common.", "Photo optional." ] },
+    PL: { name: "Poland", lang: "pl", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: true,
+      notes: [ "A GDPR (RODO) consent clause is commonly expected at the bottom (added automatically).", "Photo optional." ] },
+    EE: { name: "Estonia", lang: "en", photo: "optional", pages: "1–2", dateStyle: "num", gdpr: false,
+      notes: [ "English CVs are common in tech. Concise and results-focused.", "Photo optional." ] },
+  };
+
+  // Section headings per output language
+  CH.I18N = {
+    en: { summary: "Professional Summary", experience: "Work Experience", education: "Education", skills: "Skills", languages: "Languages", certifications: "Certifications", projects: "Projects", personal: "Personal Details", present: "Present", workAuth: "Work authorization", dob: "Date of birth", nationality: "Nationality", interests: "Interests" },
+    de: { summary: "Profil", experience: "Berufserfahrung", education: "Ausbildung", skills: "Kenntnisse und Fähigkeiten", languages: "Sprachen", certifications: "Zertifikate", projects: "Projekte", personal: "Persönliche Daten", present: "heute", workAuth: "Arbeitserlaubnis", dob: "Geburtsdatum", nationality: "Staatsangehörigkeit", interests: "Interessen" },
+    fr: { summary: "Profil", experience: "Expérience professionnelle", education: "Formation", skills: "Compétences", languages: "Langues", certifications: "Certifications", projects: "Projets", personal: "Informations personnelles", present: "aujourd'hui", workAuth: "Autorisation de travail", dob: "Date de naissance", nationality: "Nationalité", interests: "Centres d'intérêt" },
+    fi: { summary: "Profiili", experience: "Työkokemus", education: "Koulutus", skills: "Osaaminen", languages: "Kielitaito", certifications: "Sertifikaatit", projects: "Projektit", personal: "Henkilötiedot", present: "jatkuu", workAuth: "Työlupa", dob: "Syntymäaika", nationality: "Kansalaisuus", interests: "Harrastukset" },
+    sv: { summary: "Profil", experience: "Arbetslivserfarenhet", education: "Utbildning", skills: "Kompetenser", languages: "Språk", certifications: "Certifieringar", projects: "Projekt", personal: "Personuppgifter", present: "pågående", workAuth: "Arbetstillstånd", dob: "Födelsedatum", nationality: "Medborgarskap", interests: "Intressen" },
+    nl: { summary: "Profiel", experience: "Werkervaring", education: "Opleiding", skills: "Vaardigheden", languages: "Talen", certifications: "Certificeringen", projects: "Projecten", personal: "Persoonlijke gegevens", present: "heden", workAuth: "Werkvergunning", dob: "Geboortedatum", nationality: "Nationaliteit", interests: "Interesses" },
+    es: { summary: "Perfil profesional", experience: "Experiencia profesional", education: "Formación académica", skills: "Competencias", languages: "Idiomas", certifications: "Certificaciones", projects: "Proyectos", personal: "Datos personales", present: "actualidad", workAuth: "Permiso de trabajo", dob: "Fecha de nacimiento", nationality: "Nacionalidad", interests: "Intereses" },
+    it: { summary: "Profilo professionale", experience: "Esperienza professionale", education: "Istruzione e formazione", skills: "Competenze", languages: "Lingue", certifications: "Certificazioni", projects: "Progetti", personal: "Dati personali", present: "oggi", workAuth: "Permesso di lavoro", dob: "Data di nascita", nationality: "Nazionalità", interests: "Interessi" },
+    pt: { summary: "Perfil profissional", experience: "Experiência profissional", education: "Formação académica", skills: "Competências", languages: "Idiomas", certifications: "Certificações", projects: "Projetos", personal: "Dados pessoais", present: "presente", workAuth: "Autorização de trabalho", dob: "Data de nascimento", nationality: "Nacionalidade", interests: "Interesses" },
+    pl: { summary: "Podsumowanie zawodowe", experience: "Doświadczenie zawodowe", education: "Wykształcenie", skills: "Umiejętności", languages: "Języki obce", certifications: "Certyfikaty", projects: "Projekty", personal: "Dane osobowe", present: "obecnie", workAuth: "Pozwolenie na pracę", dob: "Data urodzenia", nationality: "Obywatelstwo", interests: "Zainteresowania" },
+  };
+  CH.LANG_NAMES = { en: "English", de: "German", fr: "French", fi: "Finnish", sv: "Swedish", nl: "Dutch", es: "Spanish", it: "Italian", pt: "Portuguese", pl: "Polish" };
+
+  CH.GDPR = {
+    it: "Autorizzo il trattamento dei dati personali contenuti nel mio curriculum vitae in base al Regolamento UE 2016/679 (GDPR).",
+    pl: "Wyrażam zgodę na przetwarzanie moich danych osobowych dla potrzeb niezbędnych do realizacji procesu rekrutacji zgodnie z Rozporządzeniem Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. (RODO).",
+    en: "I consent to the processing of my personal data for recruitment purposes in accordance with Regulation (EU) 2016/679 (GDPR).",
+  };
+
+  // Multi-word and special skills recognised in job ads. Lower-case.
+  CH.SKILLS = (
+    "python|java|javascript|typescript|c++|c#|.net|go|golang|rust|kotlin|swift|php|ruby|scala|r|matlab|sql|nosql|bash|powershell|" +
+    "html|css|react|react native|angular|vue|next.js|node.js|express|django|flask|fastapi|spring|spring boot|laravel|rails|graphql|rest|rest api|api|microservices|" +
+    "aws|azure|gcp|google cloud|docker|kubernetes|terraform|ansible|jenkins|github actions|gitlab|ci/cd|devops|linux|git|serverless|" +
+    "postgresql|mysql|mongodb|redis|elasticsearch|kafka|spark|hadoop|airflow|dbt|snowflake|bigquery|databricks|etl|data warehouse|data modeling|" +
+    "power bi|tableau|looker|excel|advanced excel|vba|google analytics|ga4|sap|salesforce|hubspot|jira|confluence|figma|adobe|photoshop|illustrator|indesign|premiere pro|after effects|blender|unity|unreal engine|autocad|solidworks|revit|" +
+    "machine learning|deep learning|nlp|computer vision|pytorch|tensorflow|scikit-learn|pandas|numpy|llm|generative ai|prompt engineering|data analysis|data science|statistics|a/b testing|" +
+    "testing|unit testing|test automation|selenium|cypress|qa|agile|scrum|kanban|lean|six sigma|prince2|pmp|project management|product management|stakeholder management|" +
+    "ux|ui|user research|wireframing|prototyping|accessibility|seo|sem|content marketing|social media|digital marketing|email marketing|copywriting|crm|b2b|b2c|sales|account management|business development|negotiation|" +
+    "customer service|customer success|customer support|logistics|supply chain|procurement|inventory management|warehouse|forklift|lean manufacturing|quality assurance|iso 9001|haccp|" +
+    "accounting|bookkeeping|financial analysis|financial modeling|budgeting|forecasting|ifrs|audit|payroll|tax|controlling|" +
+    "recruitment|onboarding|hr|human resources|training|coaching|teaching|nursing|patient care|first aid|cleaning|food safety|hospitality|cooking|barista|" +
+    "cybersecurity|network security|penetration testing|siem|iam|gdpr|compliance|risk management|itil|it support|troubleshooting|networking|tcp/ip|active directory|" +
+    "communication|teamwork|leadership|problem solving|problem-solving|time management|attention to detail|analytical skills|critical thinking|presentation skills|mentoring|cross-functional|" +
+    "english|finnish|swedish|german|french|spanish|italian|dutch|polish|portuguese|norwegian|danish|estonian|russian|arabic|chinese|hindi|nepali|driving licence|driver's license"
+  ).split("|");
+
+  CH.LANG_WORDS = ["english","finnish","swedish","german","french","spanish","italian","dutch","polish","portuguese","norwegian","danish","estonian","russian","arabic","chinese","hindi","nepali"];
+
+  CH.ACTION_VERBS = (
+    "accelerated achieved administered analysed analyzed architected automated boosted built championed coached collaborated completed configured consolidated " +
+    "coordinated created cut debugged decreased defined delivered deployed designed developed devised directed doubled drove enabled engineered established " +
+    "evaluated exceeded executed expanded facilitated forecasted founded generated grew guided handled headed identified implemented improved increased " +
+    "initiated innovated installed integrated introduced launched led maintained managed maximised maximized mentored migrated minimised minimized modernised modernized " +
+    "monitored negotiated optimised optimized orchestrated organised organized oversaw owned partnered pioneered planned prepared presented prioritised prioritized " +
+    "produced programmed published raised rebuilt recruited redesigned reduced refactored remodelled renegotiated reorganised resolved restructured revamped " +
+    "saved scaled secured served shipped simplified sold solved spearheaded standardised standardized streamlined strengthened supervised supported " +
+    "taught tested trained transformed translated tripled troubleshot upgraded won wrote"
+  ).split(" ");
+
+  CH.WEAK_PHRASES = ["responsible for", "duties included", "duties include", "helped", "helped with", "worked on", "assisted with", "involved in", "tasked with", "in charge of", "participated in", "various", "etc", "hard-working", "hardworking", "team player", "go-getter", "think outside the box", "synergy", "results-driven", "detail-oriented", "dynamic"];
+
+  CH.STOPWORDS = new Set((
+    "a about above after again against all also am an and any are as at be because been before being below between both but by can could did do does doing " +
+    "down during each few for from further had has have having he her here hers herself him himself his how i if in into is it its itself just me more most my " +
+    "myself no nor not now of off on once only or other our ours ourselves out over own same she should so some such than that the their theirs them themselves " +
+    "then there these they this those through to too under until up very was we were what when where which while who whom why will with you your yours yourself " +
+    "yourselves able across within without would must may might shall us etc e.g i.e via per new well one two three good great strong excellent plus based " +
+    "work working job role position team company candidate candidates looking seeking join opportunity opportunities apply application experience years year " +
+    "skills skill knowledge ability abilities including include includes required requirements preferred responsibilities responsibility offer offers benefits " +
+    "salary environment day days week weeks month months time full part please contact information related relevant need needs want help make making use using " +
+    "ensure support provide providing within across get like help also other own will help us our we're you'll you're it's what's who's that's let's junior senior mid-level hybrid remote onsite on-site intern internship trainee helsinki espoo")
+    .split(/\s+/));
+
+  CH.SAMPLE_JOB = {
+    title: "Junior Data Analyst",
+    company: "Nordlys Analytics Oy (example)",
+    text:
+`Junior Data Analyst — Helsinki (hybrid)
+
+Nordlys Analytics helps Nordic retailers make better decisions with data. We are looking for a Junior Data Analyst to join our analytics team.
+
+What you will do
+- Build and maintain dashboards in Power BI for retail clients
+- Write SQL queries to clean, join and analyse sales data from PostgreSQL
+- Automate recurring reports with Python (pandas)
+- Run A/B testing analysis and present findings to stakeholders
+- Work in an agile team with data engineers and product managers
+
+What we expect
+- Degree in business, economics, statistics, computer science or similar (or final-year student)
+- Good SQL skills and experience with Python or R
+- Experience with Power BI or Tableau
+- Strong analytical skills and attention to detail
+- Fluent English; Finnish is a plus
+- Right to work in Finland
+
+Nice to have: dbt, Excel (advanced), Google Analytics, basic statistics.`,
+  };
+
+  CH.SAMPLE_PROFILE = {
+    basics: {
+      name: "Alex Example",
+      headline: "Business Analytics Student",
+      email: "alex.example@email.com",
+      phone: "+358 40 123 4567",
+      location: "Helsinki, Finland",
+      linkedin: "linkedin.com/in/alex-example",
+      website: "github.com/alex-example",
+      workAuth: "Residence permit for studies (right to work in Finland)",
+      nationality: "", dob: "",
+    },
+    summary: "",
+    experience: [
+      { title: "Data & Reporting Intern", company: "Kauppa Retail Oy", location: "Espoo, Finland", start: "05/2025", end: "08/2025",
+        bullets: "Responsible for weekly sales reports in Excel\nBuilt a Power BI dashboard used by 12 store managers to track daily sales\nWrote SQL queries to combine sales and inventory data\nHelped the team with data cleaning" },
+      { title: "Customer Service Assistant", company: "Café Aalto", location: "Helsinki, Finland", start: "09/2023", end: "Present",
+        bullets: "Served 150+ customers per shift in a fast-paced café\nTrained 4 new team members on cash handling and food safety" },
+    ],
+    education: [
+      { degree: "BBA, Business Analytics", school: "Haaga-Helia University of Applied Sciences", location: "Helsinki", start: "08/2023", end: "05/2027", details: "Courses: Statistics, Databases (SQL), Data Visualisation, Python for Business" },
+    ],
+    skills: "Data: SQL, Python, pandas, Excel, Power BI\nTools: Git, Jira, Google Sheets\nSoft skills: Communication, Teamwork",
+    languages: "English — C1\nFinnish — A2\nNepali — Native",
+    certifications: "Microsoft PL-300: Power BI Data Analyst (in progress) | 2026",
+    projects: [
+      { name: "Helsinki bike-share analysis", link: "github.com/alex-example/bikes", bullets: "Analysed 1.2M trips with Python and pandas to find peak demand by station\nPublished an interactive Tableau dashboard" },
+    ],
+    interests: "",
+    rawResume: "",
+  };
+})();
+
+</script>
+<script>
+/* ChaLLengErs — local engine: parse profile, extract job keywords, score ATS, tailor. No network. */
+(function () {
+  const CH = (window.CH = window.CH || {});
+
+  const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const lines = (s) => String(s || "").split(/\r?\n/).map((l) => l.replace(/^\s*[-•*·▪●]\s*/, "").trim()).filter(Boolean);
+  const uniq = (a) => [...new Set(a)];
+
+  /* ---------- term matching ---------- */
+  function termRegex(term) {
+    return new RegExp("(^|[^a-z0-9äöåüéß+#])" + esc(term) + "(?=$|[^a-z0-9äöåüéß+#])", "g");
+  }
+  function variants(term) {
+    const v = [term];
+    if (/yse/.test(term)) v.push(term.replace(/yse/g, "yze"));
+    if (/yze/.test(term)) v.push(term.replace(/yze/g, "yse"));
+    if (/isation/.test(term)) v.push(term.replace(/isation/g, "ization"));
+    if (/ization/.test(term)) v.push(term.replace(/ization/g, "isation"));
+    if (/s$/.test(term) && term.length > 4) v.push(term.slice(0, -1));
+    else if (term.length > 3 && !/[^a-z ]/.test(term.slice(-1))) v.push(term + "s");
+    if (term === "problem solving") v.push("problem-solving");
+    if (term === "problem-solving") v.push("problem solving");
+    return uniq(v);
+  }
+  function countTerm(textLower, term, original) {
+    if (term === "r") return (original.match(/(^|[^A-Za-z])R(?=[,./ )]|$)/g) || []).length;
+    if (term === "go") return (original.match(/\bGo\b(?!-)/g) || []).length;
+    let n = 0;
+    for (const v of variants(term)) n += (textLower.match(termRegex(v)) || []).length;
+    return n;
+  }
+  CH.hasTerm = (textLower, term, original) => countTerm(textLower, term, original || textLower) > 0;
+
+  /* ---------- keyword extraction ---------- */
+  CH.extractKeywords = function (jd, limit = 30) {
+    const original = String(jd || "");
+    const text = original.toLowerCase();
+    if (text.trim().length < 30) return [];
+    const map = new Map();
+    const add = (term, w, kind) => {
+      const cur = map.get(term) || { term, weight: 0, count: 0, kind, required: false, optional: false };
+      cur.weight += w; cur.count += 1; map.set(term, cur);
+    };
+    for (const s of CH.SKILLS) {
+      if (s === "rest" ) continue;
+      const c = countTerm(text, s, original);
+      if (c) { add(s, 3 + c * 1.5, CH.LANG_WORDS.includes(s) ? "language" : "skill"); map.get(s).count = c; }
+    }
+    // frequent words and phrases
+    const toks = text.match(/[a-zäöåüéß][a-z0-9äöåüéß+#.\/-]*[a-z0-9+#]|[a-z]/g) || [];
+    const clean = toks.map((t) => t.replace(/[.\/-]+$/, ""));
+    const uni = new Map(), bi = new Map();
+    for (let i = 0; i < clean.length; i++) {
+      const a = clean[i];
+      const okA = a.length > 2 && !CH.STOPWORDS.has(a) && !/^\d/.test(a);
+      if (okA) uni.set(a, (uni.get(a) || 0) + 1);
+      const b = clean[i + 1];
+      if (okA && b && b.length > 2 && !CH.STOPWORDS.has(b) && !/^\d/.test(b)) {
+        const k = a + " " + b; bi.set(k, (bi.get(k) || 0) + 1);
+      }
+    }
+    for (const [k, c] of bi) if (c >= 2 && !map.has(k)) add(k, 2 + c, "phrase");
+    for (const [k, c] of uni) if (c >= 2 && !map.has(k)) add(k, c, "word");
+
+    // required vs nice-to-have context
+    const sentences = original.split(/[\n.;!?]+/);
+    let section = "";
+    for (const s of sentences) {
+      const sl = s.toLowerCase();
+      if (/(requirement|qualification|what we expect|you have|you bring|must|required|essential|we expect|your profile|who you are)/.test(sl)) section = "req";
+      if (/(nice to have|bonus|a plus|is a plus|advantage|preferred|desirable|good to have)/.test(sl)) section = "opt";
+      if (/(we offer|benefits|what we offer|why join)/.test(sl)) section = "";
+      for (const kw of map.values()) {
+        if (CH.hasTerm(sl, kw.term, s)) {
+          if (section === "req" || /(must|required|essential)/.test(sl)) { if (!kw.required) { kw.required = true; kw.weight += 2; } }
+          if (/(nice to have|plus|bonus|advantage|desirable)/.test(sl) || section === "opt") kw.optional = true;
+        }
+      }
+    }
+    // drop words already covered by a stronger phrase/skill containing them
+    const all = [...map.values()].sort((a, b) => b.weight - a.weight);
+    const strong = all.filter((k) => k.kind !== "word").map((k) => k.term);
+    const out = all.filter((k) => k.kind !== "word" || !strong.some((s) => s !== k.term && s.split(" ").includes(k.term)));
+    return out.slice(0, limit).map((k) => ({ ...k, optional: k.optional && !k.required }));
+  };
+
+  CH.guessJobTitle = function (jd) {
+    const first = lines(jd)[0] || "";
+    return first.length < 80 ? first.split(/[—–|(-]/)[0].trim() : "";
+  };
+
+  /* ---------- profile -> resume ---------- */
+  CH.toResume = function (p) {
+    const skills = lines(p.skills).map((l) => {
+      const m = l.match(/^([^:]{2,40}):\s*(.+)$/);
+      const items = (m ? m[2] : l).split(/[,;|]/).map((s) => s.trim()).filter(Boolean);
+      return { category: m ? m[1].trim() : "", items };
+    });
+    const languages = lines(p.languages).map((l) => {
+      const parts = l.split(/\s+[—–\-:|]\s+|\s*[—–:|]\s*|\s+-\s+/);
+      return { name: (parts[0] || "").trim(), level: (parts.slice(1).join(" ") || "").trim() };
+    });
+    const certifications = lines(p.certifications).map((l) => {
+      const [name, date] = l.split("|").map((s) => s.trim());
+      return { name, date: date || "" };
+    });
+    return {
+      basics: { ...p.basics },
+      summary: (p.summary || "").trim(),
+      experience: (p.experience || []).filter((e) => e.title || e.company).map((e) => ({ ...e, bullets: lines(e.bullets) })),
+      education: (p.education || []).filter((e) => e.degree || e.school).map((e) => ({ ...e })),
+      skills, languages, certifications,
+      projects: (p.projects || []).filter((x) => x.name).map((x) => ({ ...x, bullets: lines(x.bullets) })),
+      interests: (p.interests || "").trim(),
+    };
+  };
+
+  CH.resumeText = function (r) {
+    const b = r.basics || {};
+    const parts = [b.name, b.headline, b.email, b.phone, b.location, b.linkedin, b.website, b.workAuth, r.summary];
+    (r.experience || []).forEach((e) => parts.push(e.title, e.company, e.location, e.start, e.end, ...(e.bullets || [])));
+    (r.education || []).forEach((e) => parts.push(e.degree, e.school, e.details));
+    (r.skills || []).forEach((s) => parts.push(s.category, s.items.join(", ")));
+    (r.languages || []).forEach((l) => parts.push(l.name + " " + l.level));
+    (r.certifications || []).forEach((c) => parts.push(c.name));
+    (r.projects || []).forEach((x) => parts.push(x.name, x.description, ...(x.bullets || [])));
+    parts.push(r.interests);
+    return parts.filter(Boolean).join("\n");
+  };
+
+  /* ---------- bullet helpers ---------- */
+  const firstWord = (s) => (s.trim().split(/\s+/)[0] || "").toLowerCase().replace(/[^a-zäöåü-]/g, "");
+  CH.startsWithVerb = (s) => CH.ACTION_VERBS.includes(firstWord(s));
+  CH.hasMetric = (s) => /\d|%|€|\$|£/.test(s);
+  const REWRITES = [
+    [/^responsible for\s+/i, "Owned "], [/^in charge of\s+/i, "Led "], [/^tasked with\s+/i, "Delivered "],
+    [/^helped (with|to)?\s*/i, "Supported "], [/^assisted (with|in)?\s*/i, "Supported "],
+    [/^worked on\s+/i, "Contributed to "], [/^involved in\s+/i, "Contributed to "], [/^participated in\s+/i, "Contributed to "],
+    [/^duties include[d]?:?\s*/i, ""],
+  ];
+  function strengthen(b) {
+    for (const [re, rep] of REWRITES) if (re.test(b)) { const out = b.replace(re, rep); return out.charAt(0).toUpperCase() + out.slice(1); }
+    return b;
+  }
+
+  /* ---------- instant tailoring (no AI) ---------- */
+  CH.tailor = function (profile, job, settings) {
+    const r = CH.toResume(profile);
+    const kws = CH.extractKeywords(job.text);
+    const profLower = CH.resumeText(r).toLowerCase();
+    const changes = [];
+    const kwHits = (s) => kws.filter((k) => CH.hasTerm(s.toLowerCase(), k.term, s)).reduce((a, k) => a + (k.required ? 2 : 1), 0);
+
+    r.experience.forEach((e) => {
+      e.bullets = e.bullets.map((b) => { const nb = strengthen(b); if (nb !== b) changes.push(`Rewrote weak opener: “${b.slice(0, 40)}…” → “${nb.slice(0, 40)}…”`); return nb; });
+      const scored = e.bullets.map((b, i) => ({ b, i, s: kwHits(b) * 2 + (CH.hasMetric(b) ? 1 : 0) + (CH.startsWithVerb(b) ? 0.5 : 0) }));
+      scored.sort((a, z) => z.s - a.s || a.i - z.i);
+      const nb = scored.map((x) => x.b);
+      if (nb.join() !== e.bullets.join()) changes.push(`Reordered bullets at ${e.company || e.title} so job-relevant ones come first`);
+      e.bullets = nb;
+    });
+    r.projects.forEach((x) => { x.bullets = x.bullets.map(strengthen); });
+
+    // Skills: matched first, categories with most matches first. Never adds skills you did not list.
+    const isHit = (item) => kws.some((k) => CH.hasTerm(item.toLowerCase(), k.term, item) || CH.hasTerm(k.term, item.toLowerCase(), item));
+    r.skills.forEach((s) => { s.items.sort((a, b) => isHit(b) - isHit(a)); s._hits = s.items.filter(isHit).length; });
+    r.skills.sort((a, b) => b._hits - a._hits);
+    r.skills.forEach((s) => delete s._hits);
+
+    if (!r.summary) {
+      r.summary = CH.draftSummary(r, job, kws, profLower);
+      r._summaryDraft = true;
+      changes.push("Wrote a draft summary from your real skills. Edit it in “You → Summary” to make it yours.");
+    }
+    return { resume: r, keywords: kws, changes };
+  };
+
+  CH.draftSummary = function (r, job, kws, profLower) {
+    const have = kws.filter((k) => k.kind !== "word" && k.kind !== "language" && CH.hasTerm(profLower, k.term)).map((k) => pretty(k.term)).slice(0, 4);
+    const role = r.basics.headline || "Professional";
+    const title = job.title || "this role";
+    const metric = r.experience.flatMap((e) => e.bullets).find(CH.hasMetric);
+    let s = `${role} with hands-on experience in ${list(have.length ? have : r.skills.flatMap((x) => x.items).slice(0, 3))}.`;
+    if (metric) s += ` ${metric.replace(/\.$/, "")}.`;
+    s += ` Ready to bring analytical, reliable work to the ${title} role${job.company ? " at " + job.company.replace(/\s*\(example\)/, "") : ""}.`;
+    return s;
+  };
+  function list(a) { a = a.filter(Boolean); return a.length <= 1 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]; }
+  function pretty(t) {
+    const caps = { sql: "SQL", "power bi": "Power BI", python: "Python", excel: "Excel", "a/b testing": "A/B testing", aws: "AWS", gcp: "GCP", api: "API", "ci/cd": "CI/CD", ux: "UX", ui: "UI", seo: "SEO", crm: "CRM", dbt: "dbt", tableau: "Tableau", "google analytics": "Google Analytics", r: "R", postgresql: "PostgreSQL", javascript: "JavaScript", typescript: "TypeScript", react: "React", "node.js": "Node.js", docker: "Docker", kubernetes: "Kubernetes", gdpr: "GDPR", sap: "SAP", hr: "HR", qa: "QA", agile: "Agile", scrum: "Scrum", pandas: "pandas", "github actions": "GitHub Actions", gitlab: "GitLab", mongodb: "MongoDB", mysql: "MySQL", graphql: "GraphQL", bigquery: "BigQuery", hubspot: "HubSpot", pytorch: "PyTorch", tensorflow: "TensorFlow", "next.js": "Next.js", ".net": ".NET", "c#": "C#", "c++": "C++", "scikit-learn": "scikit-learn", llm: "LLM", "generative ai": "generative AI", nlp: "NLP" };
+    if (caps[t]) return caps[t];
+    if (CH.LANG_WORDS.includes(t)) return t.charAt(0).toUpperCase() + t.slice(1);
+    if (ACRO.has(t)) return t.toUpperCase();
+    if (PROPER.has(t)) return t.split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    return t;
+  }
+  const ACRO = new Set("api etl nlp llm css html aws gcp seo sem crm ux ui qa hr iam siem itil b2b b2c vba ga4 php sap ifrs pmp rest api tcp/ip haccp".split(" ").concat(["rest api", "iso 9001", "ci/cd"]));
+  const PROPER = new Set("django flask fastapi spring java rust kotlin swift ruby scala angular vue linux git kafka spark hadoop airflow snowflake bigquery databricks mongodb mysql redis elasticsearch jira confluence figma salesforce hubspot pytorch tensorflow terraform ansible jenkins azure unity blender autocad solidworks revit laravel rails graphql docker kubernetes selenium cypress scrum kanban photoshop illustrator indesign matlab golang typescript javascript python excel tableau looker lean prince2 bash powershell".split(" ").concat(["spring boot", "react native", "github actions", "google cloud", "unreal engine", "premiere pro", "after effects", "advanced excel", "six sigma", "active directory"]));
+  CH.pretty = pretty;
+
+  /* ---------- ATS analysis ---------- */
+  CH.analyze = function (r, job, settings) {
+    const kws = CH.extractKeywords(job.text);
+    const textOrig = CH.resumeText(r);
+    const text = textOrig.toLowerCase();
+    const checks = [];
+    const push = (label, pts, max, detail, fix) => checks.push({ label, pts: Math.max(0, Math.min(max, Math.round(pts))), max, status: pts >= max * 0.85 ? "pass" : pts >= max * 0.5 ? "warn" : "fail", detail, fix });
+
+    // 1. keywords (40)
+    const matched = [], missing = [];
+    let totalW = 0, gotW = 0;
+    kws.forEach((k) => { const w = k.required ? 2 : k.optional ? 0.6 : 1; totalW += w; if (CH.hasTerm(text, k.term, textOrig)) { gotW += w; matched.push(k); } else missing.push(k); });
+    const kwRatio = totalW ? gotW / totalW : 0;
+    push("Job keyword match", kws.length ? kwRatio * 40 : 0, 40,
+      kws.length ? `${matched.length} of ${kws.length} key terms found (${Math.round(kwRatio * 100)}% weighted).` : "Paste a job ad to measure keyword match.",
+      missing.length ? "Add missing terms you genuinely have, using the exact wording of the ad." : "");
+
+    // 2. title alignment (6)
+    const t = (job.title || "").toLowerCase().trim();
+    const titleHit = t && (text.includes(t) || t.split(/\s+/).filter((w) => w.length > 3 && !CH.STOPWORDS.has(w)).every((w) => text.includes(w)));
+    push("Job title appears in CV", titleHit ? 6 : 0, 6, titleHit ? "The target title appears in your headline or summary." : "The exact job title is missing from your CV.", t ? `Mention “${job.title}” in your headline or summary if it truthfully fits.` : "");
+
+    // 3. contact (8)
+    const b = r.basics || {};
+    const c = [b.name, b.email && /@/.test(b.email), b.phone, b.location, b.linkedin];
+    push("Contact details", (c.filter(Boolean).length / 5) * 8, 8, `Name, email, phone, city and LinkedIn: ${c.filter(Boolean).length}/5 present.`, "Put contact details in the main body (not a header/footer). ATS often skips headers.");
+
+    // 4. sections (8)
+    const secs = [!!r.summary, r.experience.length > 0 || r.projects.length > 0, r.education.length > 0, r.skills.length > 0];
+    push("Standard sections", (secs.filter(Boolean).length / 4) * 8, 8, `Summary, Experience, Education, Skills: ${secs.filter(Boolean).length}/4.`, "Use standard headings so the ATS can map each section.");
+
+    // 5/6. bullets (10 + 10)
+    const bullets = [...r.experience.flatMap((e) => e.bullets || []), ...r.projects.flatMap((x) => x.bullets || [])];
+    const verbR = bullets.length ? bullets.filter(CH.startsWithVerb).length / bullets.length : 0;
+    const metR = bullets.length ? bullets.filter(CH.hasMetric).length / bullets.length : 0;
+    push("Bullets start with action verbs", Math.min(1, verbR / 0.8) * 10, 10, `${Math.round(verbR * 100)}% of bullets start with a strong verb.`, "Start each bullet with a verb like Built, Reduced, Led, Automated.");
+    push("Measurable results", Math.min(1, metR / 0.5) * 10, 10, `${Math.round(metR * 100)}% of bullets contain a number.`, "Add real numbers: %, €, time saved, users, volume. Never invent them.");
+
+    // 7. weak phrases (6)
+    const weak = CH.WEAK_PHRASES.filter((w) => termRegex(w).test(text));
+    push("No weak or cliché phrases", 6 - weak.length * 1.5, 6, weak.length ? `Found: ${weak.map((w) => "“" + w + "”").join(", ")}.` : "No weak phrases found.", "Replace with what you did and the result.");
+
+    // 8. length (6)
+    const words = text.split(/\s+/).filter(Boolean).length;
+    const lenPts = words < 200 ? 2 : words < 350 ? 4.5 : words <= 900 ? 6 : words <= 1100 ? 4 : 2;
+    push("Length", lenPts, 6, `${words} words. Aim for about 350–900 (1–2 pages).`, words < 350 ? "Add more evidence: projects, results, coursework." : words > 900 ? "Cut older or less relevant bullets." : "");
+
+    // 9. pronouns (3)
+    const pron = (text.match(/(^|[^a-z])(i|me|my)(?=[^a-z])/g) || []).length;
+    push("No first-person pronouns", pron ? 3 - pron : 3, 3, pron ? `${pron} uses of I/me/my.` : "None found.", "Write “Built…”, not “I built…”.");
+
+    // 10. dates (3)
+    const dated = r.experience.filter((e) => e.start && e.end).length;
+    push("Dates on every role", r.experience.length ? (dated / r.experience.length) * 3 : 3, 3, `${dated}/${r.experience.length} roles have start and end dates.`, "Use MM/YYYY – MM/YYYY.");
+
+    const placeholders = (textOrig.match(/\[[^\]]{1,40}\]/g) || []);
+    const warnings = [];
+    if (placeholders.length) warnings.push(`Unfilled placeholders: ${uniq(placeholders).slice(0, 5).join(" ")}. Replace them with real numbers or delete them.`);
+    const country = CH.COUNTRIES[settings.country] || CH.COUNTRIES.EU;
+    if (settings.showPhoto && country.photo === "no") warnings.push(`Photos are not expected in ${country.name}. Turn the photo off.`);
+    if (settings.showDob && country.photo === "no") warnings.push(`Date of birth is not expected in ${country.name}.`);
+    const langReq = kws.filter((k) => k.kind === "language");
+    langReq.forEach((k) => { if (!r.languages.some((l) => l.name.toLowerCase().includes(k.term))) warnings.push(`The ad mentions ${pretty(k.term[0].toUpperCase() + k.term.slice(1))}. List your level (even A1/A2) if you have any.`); });
+    if (/right to work|work permit|eligib|residence permit|visa/i.test(job.text || "") && !b.workAuth) warnings.push("The ad mentions right to work. Add your work authorization status.");
+
+    const score = checks.reduce((a, c) => a + c.pts, 0);
+    return { score, checks, matched, missing, keywords: kws, warnings, words };
+  };
+
+  /* ---------- cover letter draft (no AI) ---------- */
+  CH.draftCoverLetter = function (r, job, settings) {
+    const kws = CH.extractKeywords(job.text);
+    const text = CH.resumeText(r).toLowerCase();
+    const have = kws.filter((k) => k.kind === "skill" && CH.hasTerm(text, k.term)).map((k) => pretty(k.term)).slice(0, 5);
+    const best = r.experience.flatMap((e) => (e.bullets || []).map((b) => ({ b, e }))).filter((x) => CH.hasMetric(x.b)).slice(0, 2);
+    const company = (job.company || "your company").replace(/\s*\(example\)/, "");
+    const name = r.basics.name || "";
+    const p = [];
+    p.push(`Dear Hiring Team at ${company},`);
+    p.push(`I am applying for the ${job.title || "advertised"} position. ${r.basics.headline ? "As a " + r.basics.headline.toLowerCase() : "With my background"}${have.length ? ", I work with " + list(have) : ""}, and your role matches what I do best.`);
+    if (best.length) p.push(best.map((x) => `At ${x.e.company}, I ${x.b.charAt(0).toLowerCase() + x.b.slice(1).replace(/\.$/, "")}.`).join(" ") + " I would bring the same focus on measurable results to your team.");
+    p.push(`[One or two sentences on why ${company} specifically: a product, value or project you genuinely like.]`);
+    if (r.basics.workAuth) p.push(`${r.basics.workAuth}.`);
+    p.push(`I would welcome the chance to discuss how I can contribute. Thank you for your time.`);
+    p.push(`Kind regards,\n${name}${r.basics.phone ? "\n" + r.basics.phone : ""}${r.basics.email ? "\n" + r.basics.email : ""}`);
+    return p.join("\n\n");
+  };
+
+  CH.lines = lines;
+  CH.list = list;
+})();
+
+</script>
+<script>
+/* ChaLLengErs — master prompt builder. Works with any chat AI (ChatGPT, Claude, Gemini, Copilot, Le Chat). */
+(function () {
+  const CH = (window.CH = window.CH || {});
+
+  CH.SCHEMA_EXAMPLE = `{
+  "basics": {"name": "", "headline": "", "email": "", "phone": "", "location": "", "linkedin": "", "website": "", "workAuth": "", "nationality": "", "dob": ""},
+  "summary": "",
+  "experience": [{"title": "", "company": "", "location": "", "start": "MM/YYYY", "end": "MM/YYYY or Present", "bullets": [""]}],
+  "education": [{"degree": "", "school": "", "location": "", "start": "", "end": "", "details": ""}],
+  "skills": [{"category": "", "items": [""]}],
+  "languages": [{"name": "", "level": "CEFR level or Native"}],
+  "certifications": [{"name": "", "date": ""}],
+  "projects": [{"name": "", "link": "", "bullets": [""]}],
+  "interests": "",
+  "coverLetter": "",
+  "ats": {"targetTitle": "", "matchedKeywords": [""], "missingKeywords": [""], "questionsForCandidate": [""], "notes": [""]}
+}`;
+
+  CH.buildPrompt = function ({ profile, job, settings, instructions, output }) {
+    const country = CH.COUNTRIES[settings.country] || CH.COUNTRIES.EU;
+    const langName = CH.LANG_NAMES[settings.lang] || "English";
+    const resume = CH.toResume(profile);
+    const kws = CH.extractKeywords(job.text).slice(0, 25).map((k) => k.term + (k.required ? " (required)" : k.optional ? " (nice to have)" : ""));
+    const wantCover = settings.coverLetter;
+
+    const outputSpec = output === "text"
+      ? `OUTPUT FORMAT
+Return, in this order:
+1. The finished CV as clean plain text (Markdown headings allowed, no tables, no columns, no emojis, no icons), ready to paste into a single-column document.
+2. ${wantCover ? "A cover letter (max 250 words)." : "(no cover letter)"}
+3. A short "ATS report": matched keywords, missing keywords the candidate should add ONLY if true, and up to 5 questions whose answers would make the CV stronger (for example, missing numbers).`
+      : `OUTPUT FORMAT
+Return ONLY one JSON object inside a single \`\`\`json code block, no text before or after. Use exactly this shape (omit nothing; use "" or [] when empty):
+${CH.SCHEMA_EXAMPLE}
+- "bullets" are arrays of strings without leading dashes.
+- ${wantCover ? '"coverLetter": a tailored letter, max 250 words, in ' + langName + '.' : '"coverLetter": "".'}
+- "ats.questionsForCandidate": up to 5 questions whose answers would make the CV stronger.`;
+
+    return `You are CHALLENGERS, an elite European career strategist, senior technical recruiter and ATS (applicant tracking system) specialist. You have screened thousands of CVs for employers in ${country.name} and know exactly what ATS parsers (Workday, SAP SuccessFactors, Teamtailor, Greenhouse, Lever, Recruitee, Personio) and human recruiters reward.
+
+MISSION
+Write the strongest possible, 100% truthful CV for the job below, so that it (1) parses cleanly in any ATS, (2) ranks high on keyword match, and (3) convinces a human recruiter in 7 seconds.
+
+NON-NEGOTIABLE RULES
+1. Truth first. Never invent employers, titles, dates, degrees, certifications, skills, tools or numbers. You may rephrase, reorder, merge, sharpen and translate. If a metric would clearly help but is unknown, write the bullet without a number and ask about it in the questions list. Never use made-up placeholders inside the CV.
+2. Mirror the job ad's exact wording for skills and tools the candidate really has (e.g. if the ad says "Power BI", write "Power BI", not "BI tools"). Place the most important keywords in the headline, summary, the first bullets of the most recent role and the skills section.
+3. Do not list a skill from the ad that the candidate does not have. Put it in missingKeywords instead.
+4. Bullets: start with a strong past-tense action verb (present tense for the current role), follow the formula "Accomplished X, measured by Y, by doing Z", 1–2 lines each, 3–6 bullets for recent roles and 1–3 for old or unrelated roles. Lead with results, not duties. No "responsible for", "helped", "worked on", no first-person pronouns, no clichés ("hard-working", "team player", "results-driven").
+5. Summary: 2–4 lines and about 50–80 words: who the candidate is (matching the target title if truthful), years of experience or study level, 3–5 top matching skills, one proof point, and what they bring to this employer.
+6. ATS-safe format: one column, standard headings, no tables, text boxes, graphics, icons or skill bars, contact details in the body. Dates as ${country.dateStyle === "word" ? "Mon YYYY (e.g. Jan 2024)" : "MM/YYYY"}. Reverse-chronological order.
+7. Prioritise ruthlessly: what is most relevant to THIS job goes first. Cut what does not help. Target length: ${country.pages} page(s).
+8. Language levels use CEFR (A1–C2) or "Native". If the ad requires a language, make the candidate's level easy to find.
+9. Write the whole CV in ${langName}${settings.lang !== "en" ? " (translate the candidate's content faithfully)" : ""}. Use ${settings.country === "UK" || settings.country === "IE" ? "British" : "consistent"} spelling.
+
+COUNTRY CONVENTIONS — ${country.name}
+${country.notes.map((n) => "- " + n).join("\n")}
+- Photo: ${country.photo === "no" ? "do not include" : "optional (the app handles it; do not mention it)"}.
+${country.gdpr ? "- The app adds the GDPR consent clause automatically; do not add it yourself." : ""}
+
+PROCESS (think step by step silently, output only the final result)
+A. Analyse the job ad: exact job title, seniority, the must-have skills, nice-to-haves, soft skills, language and work-permit requirements, and the company's main problem this hire solves.
+B. Map every requirement to evidence in the candidate data. Note gaps.
+C. Write the CV following all rules above.
+D. Self-check before answering: every keyword the candidate truly has appears at least once; no invented facts; every bullet starts with a verb; dates are consistent; nothing breaks ATS parsing. Fix anything that fails.
+
+TARGET JOB
+Title: ${job.title || "(see ad)"}
+Company: ${job.company || "(see ad)"}
+Country: ${country.name}
+Top keywords detected by ChaLLengErs: ${kws.join(", ") || "(none detected)"}
+Job ad:
+"""
+${(job.text || "").trim().slice(0, 12000)}
+"""
+
+CANDIDATE DATA (the only source of facts)
+${JSON.stringify(resume, null, 1)}
+${profile.rawResume ? `\nCandidate's existing CV / extra notes (also a source of facts):\n"""\n${profile.rawResume.trim().slice(0, 12000)}\n"""` : ""}
+
+CANDIDATE'S OWN INSTRUCTIONS (follow them unless they break the truth rule)
+${(instructions || "None.").trim()}
+
+${outputSpec}`;
+  };
+
+  /* Parse an AI answer (JSON in a code block, or raw JSON) into a resume object. */
+  CH.parseAIResult = function (txt) {
+    let s = String(txt || "").trim();
+    const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fence) s = fence[1];
+    const a = s.indexOf("{"), z = s.lastIndexOf("}");
+    if (a < 0 || z < a) throw new Error("No JSON object found. Ask the AI for the JSON format, or choose “Plain text” output.");
+    const obj = JSON.parse(s.slice(a, z + 1));
+    const arr = (x) => (Array.isArray(x) ? x : x ? [x] : []);
+    const str = (x) => (x == null ? "" : String(x));
+    const b = obj.basics || {};
+    return {
+      basics: { name: str(b.name), headline: str(b.headline), email: str(b.email), phone: str(b.phone), location: str(b.location), linkedin: str(b.linkedin), website: str(b.website), workAuth: str(b.workAuth), nationality: str(b.nationality), dob: str(b.dob) },
+      summary: str(obj.summary),
+      experience: arr(obj.experience).map((e) => ({ title: str(e.title), company: str(e.company), location: str(e.location), start: str(e.start), end: str(e.end), bullets: arr(e.bullets).map(str).filter(Boolean) })),
+      education: arr(obj.education).map((e) => ({ degree: str(e.degree), school: str(e.school), location: str(e.location), start: str(e.start), end: str(e.end), details: str(e.details) })),
+      skills: arr(obj.skills).map((s) => (typeof s === "string" ? { category: "", items: [s] } : { category: str(s.category), items: arr(s.items).map(str).filter(Boolean) })),
+      languages: arr(obj.languages).map((l) => (typeof l === "string" ? { name: l, level: "" } : { name: str(l.name), level: str(l.level) })),
+      certifications: arr(obj.certifications).map((c) => (typeof c === "string" ? { name: c, date: "" } : { name: str(c.name), date: str(c.date) })),
+      projects: arr(obj.projects).map((p) => ({ name: str(p.name), link: str(p.link), bullets: arr(p.bullets).map(str).filter(Boolean) })),
+      interests: str(obj.interests),
+      coverLetter: str(obj.coverLetter),
+      ats: obj.ats || {},
+    };
+  };
+
+  /* Convert a resume object back into the editable profile form (so AI results can be edited). */
+  CH.resumeToProfile = function (r, prev) {
+    const j = (a) => (a || []).join("\n");
+    return {
+      basics: { ...(prev && prev.basics), ...r.basics },
+      summary: r.summary || "",
+      experience: r.experience.map((e) => ({ title: e.title, company: e.company, location: e.location, start: e.start, end: e.end, bullets: j(e.bullets) })),
+      education: r.education.map((e) => ({ ...e })),
+      skills: r.skills.map((s) => (s.category ? s.category + ": " : "") + s.items.join(", ")).join("\n"),
+      languages: r.languages.map((l) => l.name + (l.level ? " — " + l.level : "")).join("\n"),
+      certifications: r.certifications.map((c) => c.name + (c.date ? " | " + c.date : "")).join("\n"),
+      projects: r.projects.map((p) => ({ name: p.name, link: p.link, bullets: j(p.bullets) })),
+      interests: r.interests || "",
+      rawResume: (prev && prev.rawResume) || "",
+    };
+  };
+})();
+
+</script>
+<script>
+/* ChaLLengErs — layout model + exporters (HTML preview, text PDF, DOCX, TXT). Pure JS, no libraries. */
+(function () {
+  const CH = (window.CH = window.CH || {});
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  function fmtDate(d, settings) {
+    d = String(d || "").trim();
+    if (!d) return "";
+    const t = CH.I18N[settings.lang] || CH.I18N.en;
+    if (/^(present|now|current|ongoing|today|heute|nyt|jatkuu)$/i.test(d)) return t.present;
+    const country = CH.COUNTRIES[settings.country] || CH.COUNTRIES.EU;
+    const m = d.match(/^(\d{1,2})[\/.-](\d{4})$/);
+    if (m && country.dateStyle === "word" && settings.lang === "en") return MONTHS[+m[1] - 1] + " " + m[2];
+    if (m) return m[1].padStart(2, "0") + "/" + m[2];
+    return d;
+  }
+  const range = (a, b, s) => [fmtDate(a, s), fmtDate(b, s)].filter(Boolean).join(" – ");
+  const join = (arr, sep) => arr.filter((x) => x && String(x).trim()).join(sep);
+
+  /* Build an ordered list of layout blocks shared by every output format. */
+  CH.layout = function (r, settings) {
+    const t = CH.I18N[settings.lang] || CH.I18N.en;
+    const country = CH.COUNTRIES[settings.country] || CH.COUNTRIES.EU;
+    const b = r.basics || {};
+    const out = [];
+    out.push({ t: "name", text: b.name || "Your Name" });
+    if (b.headline) out.push({ t: "headline", text: b.headline });
+    out.push({ t: "contact", text: join([b.location, b.phone, b.email, b.linkedin, b.website], "  |  ") });
+    if (b.workAuth) out.push({ t: "contact", text: t.workAuth + ": " + b.workAuth });
+
+    const personal = [];
+    if (settings.showDob && b.dob) personal.push([t.dob, b.dob]);
+    if (settings.showNationality && b.nationality) personal.push([t.nationality, b.nationality]);
+
+    const sec = {
+      summary: () => { if (r.summary) { out.push({ t: "heading", text: t.summary }); out.push({ t: "para", text: r.summary }); } },
+      experience: () => {
+        if (!r.experience.length) return;
+        out.push({ t: "heading", text: t.experience });
+        r.experience.forEach((e) => {
+          out.push({ t: "entry", left: join([e.title, e.company], ", "), right: range(e.start, e.end, settings), sub: e.location || "" });
+          (e.bullets || []).forEach((x) => out.push({ t: "bullet", text: x }));
+        });
+      },
+      education: () => {
+        if (!r.education.length) return;
+        out.push({ t: "heading", text: t.education });
+        r.education.forEach((e) => {
+          out.push({ t: "entry", left: join([e.degree, e.school], ", "), right: range(e.start, e.end, settings), sub: e.location || "" });
+          if (e.details) out.push({ t: "para", text: e.details, small: true });
+        });
+      },
+      skills: () => {
+        if (!r.skills.length) return;
+        out.push({ t: "heading", text: t.skills });
+        r.skills.forEach((s) => (s.category ? out.push({ t: "kv", label: s.category, text: s.items.join(", ") }) : out.push({ t: "para", text: s.items.join(", ") })));
+      },
+      projects: () => {
+        if (!r.projects.length) return;
+        out.push({ t: "heading", text: t.projects });
+        r.projects.forEach((p) => {
+          out.push({ t: "entry", left: p.name, right: "", sub: p.link || "" });
+          (p.bullets || []).forEach((x) => out.push({ t: "bullet", text: x }));
+        });
+      },
+      certifications: () => {
+        if (!r.certifications.length) return;
+        out.push({ t: "heading", text: t.certifications });
+        r.certifications.forEach((c) => out.push({ t: "bullet", text: join([c.name, c.date], " — ") }));
+      },
+      languages: () => {
+        if (!r.languages.length) return;
+        out.push({ t: "heading", text: t.languages });
+        out.push({ t: "para", text: r.languages.map((l) => join([l.name, l.level], " ")).join("  |  ") });
+      },
+      personal: () => {
+        if (!personal.length) return;
+        out.push({ t: "heading", text: t.personal });
+        personal.forEach(([k, v]) => out.push({ t: "kv", label: k, text: v }));
+      },
+      interests: () => { if (r.interests) { out.push({ t: "heading", text: t.interests }); out.push({ t: "para", text: r.interests }); } },
+    };
+
+    let order = ["summary", "experience", "education", "skills", "projects", "certifications", "languages", "personal", "interests"];
+    const eduFirst = settings.order === "education" || (settings.order !== "experience" && !r.experience.length);
+    if (eduFirst) order = ["summary", "education", "skills", "projects", "experience", "certifications", "languages", "personal", "interests"];
+    order.forEach((k) => sec[k]());
+    if (settings.gdpr) out.push({ t: "small", text: CH.GDPR[settings.lang] || CH.GDPR.en });
+    return out;
+  };
+
+  /* ---------- HTML preview ---------- */
+  const h = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  CH.escapeHTML = h;
+  CH.renderHTML = function (r, settings) {
+    const blocks = CH.layout(r, settings);
+    let html = `<div class="cv cv-${h(settings.template)}" style="--cv-accent:${h(settings.accent)}">`;
+    let inList = false;
+    const close = () => { if (inList) { html += "</ul>"; inList = false; } };
+    const photo = settings.showPhoto && settings.photo ? `<img class="cv-photo" src="${h(settings.photo)}" alt="Profile photo">` : "";
+    blocks.forEach((b, i) => {
+      if (b.t !== "bullet") close();
+      switch (b.t) {
+        case "name": html += `<header class="cv-head">${photo}<div><h1 class="cv-name">${h(b.text)}</h1>`; break;
+        case "headline": html += `<p class="cv-headline">${h(b.text)}</p>`; break;
+        case "contact": html += `<p class="cv-contact">${h(b.text)}</p>`; if (!blocks[i + 1] || blocks[i + 1].t !== "contact") html += `</div></header>`; break;
+        case "heading": html += `<h2 class="cv-h">${h(b.text)}</h2>`; break;
+        case "para": html += `<p class="cv-p${b.small ? " cv-small" : ""}">${h(b.text)}</p>`; break;
+        case "entry": html += `<div class="cv-entry"><div class="cv-row"><strong>${h(b.left)}</strong><span>${h(b.right)}</span></div>${b.sub ? `<div class="cv-sub">${h(b.sub)}</div>` : ""}</div>`; break;
+        case "bullet": if (!inList) { html += "<ul>"; inList = true; } html += `<li>${h(b.text)}</li>`; break;
+        case "kv": html += `<p class="cv-p"><strong>${h(b.label)}:</strong> ${h(b.text)}</p>`; break;
+        case "small": html += `<p class="cv-gdpr">${h(b.text)}</p>`; break;
+      }
+    });
+    close();
+    return html + "</div>";
+  };
+
+  /* ---------- Plain text ---------- */
+  CH.renderText = function (r, settings) {
+    const out = [];
+    CH.layout(r, settings).forEach((b) => {
+      switch (b.t) {
+        case "name": out.push(b.text.toUpperCase()); break;
+        case "headline": case "contact": out.push(b.text); break;
+        case "heading": out.push("", b.text.toUpperCase(), "-".repeat(Math.min(40, b.text.length))); break;
+        case "para": case "small": out.push(b.text); break;
+        case "entry": out.push("", b.left + (b.right ? "  (" + b.right + ")" : "")); if (b.sub) out.push(b.sub); break;
+        case "bullet": out.push("• " + b.text); break;
+        case "kv": out.push(b.label + ": " + b.text); break;
+      }
+    });
+    return out.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+  };
+
+  /* ---------- PDF (real, selectable text — ATS readable) ---------- */
+  const WIN = { 0x20ac: 0x80, 0x201a: 0x82, 0x0192: 0x83, 0x201e: 0x84, 0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87, 0x02c6: 0x88, 0x2030: 0x89, 0x0160: 0x8a, 0x2039: 0x8b, 0x0152: 0x8c, 0x017d: 0x8e, 0x2018: 0x91, 0x2019: 0x92, 0x201c: 0x93, 0x201d: 0x94, 0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97, 0x02dc: 0x98, 0x2122: 0x99, 0x0161: 0x9a, 0x203a: 0x9b, 0x0153: 0x9c, 0x017e: 0x9e, 0x0178: 0x9f };
+  const EXTRA = { "ł": "l", "Ł": "L", "đ": "d", "Đ": "D", "ı": "i", "ő": "ö", "ű": "ü", "Ő": "Ö", "Ű": "Ü", "→": "->", "≥": ">=", "≤": "<=", "✓": "+", "−": "-" };
+  function winAnsi(str) {
+    let s = "";
+    for (const ch of String(str)) {
+      const c = ch.codePointAt(0);
+      if (c >= 32 && c < 127) s += ch;
+      else if (c >= 160 && c <= 255) s += String.fromCharCode(c);
+      else if (WIN[c]) s += String.fromCharCode(WIN[c]);
+      else if (EXTRA[ch]) s += EXTRA[ch];
+      else if (c === 9 || c === 10) s += " ";
+      else {
+        const base = ch.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        s += base && base.codePointAt(0) < 256 ? base : "?";
+      }
+    }
+    return s;
+  }
+  function textWidth(s, bold, size) {
+    const tbl = CH.FONT_W[bold ? "B" : "R"];
+    let w = 0;
+    for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); w += c >= 32 && c <= 255 ? tbl[c - 32] : 500; }
+    return (w * size) / 1000;
+  }
+  function wrap(s, bold, size, maxW) {
+    const words = s.split(/ +/);
+    const lines = [];
+    let cur = "";
+    for (const w of words) {
+      const t = cur ? cur + " " + w : w;
+      if (textWidth(t, bold, size) <= maxW || !cur) cur = t;
+      else { lines.push(cur); cur = w; }
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+  const pdfStr = (s) => "(" + s.replace(/[\\()]/g, "\\$&").replace(/[\x80-\xff]/g, (c) => "\\" + c.charCodeAt(0).toString(8).padStart(3, "0")) + ")";
+  function hexToRgb(hex) {
+    const m = String(hex || "#1f3a5f").replace("#", "").match(/^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    return m ? [1, 2, 3].map((i) => (parseInt(m[i], 16) / 255).toFixed(3)).join(" ") : "0.122 0.227 0.373";
+  }
+
+  CH.buildPDF = function (r, settings, photoJpeg /* {bytes, w, h} | null */) {
+    const W = 595.28, H = 841.89, M = settings.template === "compact" ? 42 : 50;
+    const base = settings.template === "compact" ? 9.5 : 10.2;
+    const lh = base * 1.38;
+    const accent = hexToRgb(settings.accent);
+    const centered = settings.template === "classic";
+    const pages = [];
+    let ops = [], y = H - M;
+    const newPage = () => { pages.push(ops); ops = []; y = H - M; };
+    const need = (hgt) => { if (y - hgt < M) newPage(); };
+    const text = (s, x, size, bold, color) => { ops.push(`BT ${color || "0.08 0.08 0.1"} rg /${bold ? "F2" : "F1"} ${size} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td ${pdfStr(s)} Tj ET`); };
+    const maxW = W - 2 * M;
+    const blocks = CH.layout(r, settings);
+    let headerX = M, headerW = maxW, photoDrawn = false;
+
+    blocks.forEach((b, i) => {
+      if (b.t === "name") {
+        if (photoJpeg && settings.showPhoto) {
+          const ph = 78, pw = (photoJpeg.w / photoJpeg.h) * ph;
+          ops.push(`q ${pw.toFixed(2)} 0 0 ${ph} ${(W - M - pw).toFixed(2)} ${(H - M - ph + 6).toFixed(2)} cm /Im1 Do Q`);
+          headerW = maxW - pw - 14; photoDrawn = true;
+        }
+        const size = 22, s = winAnsi(b.text);
+        y -= size * 0.8;
+        const x = centered && !photoDrawn ? (W - textWidth(s, true, size)) / 2 : headerX;
+        text(s, x, size, true, settings.template === "modern" ? accent : null);
+        y -= 8;
+        return;
+      }
+      if (b.t === "headline" || b.t === "contact") {
+        const size = b.t === "headline" ? base + 2 : base - 0.6;
+        wrap(winAnsi(b.text), b.t === "headline", size, headerW).forEach((ln) => {
+          y -= size * 1.35;
+          const x = centered && !photoDrawn ? (W - textWidth(ln, b.t === "headline", size)) / 2 : headerX;
+          text(ln, x, size, b.t === "headline", b.t === "headline" ? accent : "0.25 0.25 0.3");
+        });
+        if (photoDrawn && blocks[i + 1] && !["headline", "contact"].includes(blocks[i + 1].t)) y = Math.min(y, H - M - 78);
+        return;
+      }
+      if (b.t === "heading") {
+        need(lh * 4);
+        y -= base * 1.7;
+        const s = winAnsi(settings.template === "classic" ? b.text.toUpperCase() : b.text);
+        text(s, M, base + 2, true, accent);
+        y -= 4;
+        ops.push(`${accent} RG 0.7 w ${M} ${y.toFixed(2)} m ${(W - M).toFixed(2)} ${y.toFixed(2)} l S`);
+        y -= 2;
+        return;
+      }
+      if (b.t === "entry") {
+        need(lh * 3);
+        y -= lh + 2;
+        const right = winAnsi(b.right || "");
+        const rw = right ? textWidth(right, false, base) : 0;
+        const leftLines = wrap(winAnsi(b.left), true, base, maxW - rw - 12);
+        leftLines.forEach((ln, k) => { if (k) y -= lh; text(ln, M, base, true); if (!k && right) text(right, W - M - rw, base, false, "0.25 0.25 0.3"); });
+        if (b.sub) { y -= lh * 0.95; text(winAnsi(b.sub), M, base - 0.8, false, "0.35 0.35 0.4"); }
+        return;
+      }
+      if (b.t === "bullet") {
+        const ind = 12;
+        const lines = wrap(winAnsi(b.text), false, base, maxW - ind);
+        need(lh * Math.min(lines.length, 2));
+        lines.forEach((ln, k) => { need(lh); y -= lh; if (!k) text("\x95", M + 2, base, false); text(ln, M + ind, base, false); });
+        return;
+      }
+      if (b.t === "para" || b.t === "kv" || b.t === "small") {
+        const size = b.t === "small" ? base - 2.2 : b.small ? base - 0.5 : base;
+        if (b.t === "kv") {
+          const label = winAnsi(b.label + ": ");
+          const lw = textWidth(label, true, size);
+          const lines = wrap(winAnsi(b.text), false, size, maxW - lw);
+          lines.forEach((ln, k) => { need(lh); y -= lh; if (!k) text(label, M, size, true); text(ln, M + lw, size, false); });
+          return;
+        }
+        if (b.t === "small") y -= lh;
+        wrap(winAnsi(b.text), false, size, maxW).forEach((ln) => { need(size * 1.38); y -= size * 1.38; text(ln, M, size, false, b.t === "small" ? "0.4 0.4 0.45" : null); });
+      }
+    });
+    pages.push(ops);
+
+    // Assemble PDF objects (latin1 string, 1 char = 1 byte)
+    const objs = [];
+    const add = (s) => { objs.push(s); return objs.length; };
+    const catalog = add(""), pagesId = add("");
+    const f1 = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+    const f2 = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+    let img = 0;
+    if (photoJpeg && settings.showPhoto) img = add(`<< /Type /XObject /Subtype /Image /Width ${photoJpeg.w} /Height ${photoJpeg.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${photoJpeg.bytes.length} >>\nstream\n${photoJpeg.bytes}\nendstream`);
+    const kids = [];
+    pages.forEach((o, i) => {
+      const content = o.join("\n");
+      const cid = add(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+      const res = `<< /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >>${img && i === 0 ? ` /XObject << /Im1 ${img} 0 R >>` : ""} >>`;
+      kids.push(add(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${W} ${H}] /Resources ${res} /Contents ${cid} 0 R >>`));
+    });
+    objs[catalog - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
+    objs[pagesId - 1] = `<< /Type /Pages /Kids [${kids.map((k) => k + " 0 R").join(" ")}] /Count ${kids.length} >>`;
+    const info = add(`<< /Title ${pdfStr(winAnsi((r.basics.name || "CV") + " - CV"))} /Author ${pdfStr(winAnsi(r.basics.name || ""))} /Producer (ChaLLengErs) >>`);
+    let pdf = "%PDF-1.4\n%\xe2\xe3\xcf\xd3\n";
+    const offs = [];
+    objs.forEach((o, i) => { offs.push(pdf.length); pdf += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+    const xref = pdf.length;
+    pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map((o) => String(o).padStart(10, "0") + " 00000 n \n").join("");
+    pdf += `trailer\n<< /Size ${objs.length + 1} /Root ${catalog} 0 R /Info ${info} 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    const bytes = new Uint8Array(pdf.length);
+    for (let i = 0; i < pdf.length; i++) bytes[i] = pdf.charCodeAt(i) & 0xff;
+    return { bytes, pages: pages.length };
+  };
+
+  /* ---------- DOCX (Word, Google Docs, LibreOffice) ---------- */
+  const x = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");
+  CH.buildDOCX = function (r, settings) {
+    const accent = String(settings.accent || "#1f3a5f").replace("#", "");
+    const sz = settings.template === "compact" ? 19 : 21; // half-points
+    const run = (t, o = {}) => `<w:r><w:rPr>${o.b ? "<w:b/>" : ""}${o.color ? `<w:color w:val="${o.color}"/>` : ""}<w:sz w:val="${o.sz || sz}"/></w:rPr><w:t xml:space="preserve">${x(t)}</w:t></w:r>`;
+    const center = settings.template === "classic";
+    const p = (inner, o = {}) => `<w:p><w:pPr>${o.style ? `<w:pStyle w:val="${o.style}"/>` : ""}${o.num ? '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>' : ""}${o.border ? `<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="${accent}"/></w:pBdr>` : ""}${o.tab ? '<w:tabs><w:tab w:val="right" w:pos="9638"/></w:tabs>' : ""}<w:spacing w:before="${o.before || 0}" w:after="${o.after == null ? 40 : o.after}"/>${o.center ? '<w:jc w:val="center"/>' : ""}</w:pPr>${inner}</w:p>`;
+    const body = [];
+    CH.layout(r, settings).forEach((b) => {
+      switch (b.t) {
+        case "name": body.push(p(run(b.text, { b: 1, sz: 44, color: settings.template === "modern" ? accent : null }), { center, after: 60, style: "Title" })); break;
+        case "headline": body.push(p(run(b.text, { b: 1, sz: sz + 4, color: accent }), { center })); break;
+        case "contact": body.push(p(run(b.text, { sz: sz - 1 }), { center })); break;
+        case "heading": body.push(p(run(settings.template === "classic" ? b.text.toUpperCase() : b.text, { b: 1, sz: sz + 4, color: accent }), { border: 1, before: 220, after: 80, style: "Heading1" })); break;
+        case "para": body.push(p(run(b.text, { sz: b.small ? sz - 1 : sz }))); break;
+        case "small": body.push(p(run(b.text, { sz: sz - 4, color: "666666" }), { before: 200 })); break;
+        case "kv": body.push(p(run(b.label + ": ", { b: 1 }) + run(b.text))); break;
+        case "bullet": body.push(p(run(b.text), { num: 1, after: 20 })); break;
+        case "entry":
+          body.push(p(run(b.left, { b: 1 }) + (b.right ? `<w:r><w:tab/></w:r>` + run(b.right) : ""), { tab: 1, before: 120, after: 0 }));
+          if (b.sub) body.push(p(run(b.sub, { sz: sz - 2, color: "555555" })));
+          break;
+      }
+    });
+    const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+    const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${NS}><w:body>${body.join("")}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+    const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${NS}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial" w:eastAsia="Arial"/><w:sz w:val="${sz}"/><w:lang w:val="en-GB"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="40" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style><w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/></w:style><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:outlineLvl w:val="0"/></w:pPr></w:style></w:styles>`;
+    const numbering = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:numbering ${NS}><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="360" w:hanging="240"/></w:pPr><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/></w:rPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>`;
+    const files = {
+      "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>`,
+      "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`,
+      "docProps/core.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${x((r.basics.name || "CV") + " - CV")}</dc:title><dc:creator>${x(r.basics.name || "")}</dc:creator></cp:coreProperties>`,
+      "word/document.xml": doc,
+      "word/styles.xml": styles,
+      "word/numbering.xml": numbering,
+      "word/_rels/document.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/></Relationships>`,
+    };
+    return CH.zip(files);
+  };
+
+  /* Minimal ZIP writer (stored, no compression) */
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = (u8) => { let c = 0xffffffff; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  CH.zip = function (files) {
+    const enc = new TextEncoder();
+    const chunks = [], central = [];
+    let offset = 0;
+    const u16 = (v) => [v & 0xff, (v >>> 8) & 0xff];
+    const u32 = (v) => [v & 0xff, (v >>> 8) & 0xff, (v >>> 16) & 0xff, (v >>> 24) & 0xff];
+    for (const [name, content] of Object.entries(files)) {
+      const nb = enc.encode(name), data = typeof content === "string" ? enc.encode(content) : content, crc = crc32(data);
+      const local = new Uint8Array([...u32(0x04034b50), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(nb.length), ...u16(0)]);
+      chunks.push(local, nb, data);
+      central.push(new Uint8Array([...u32(0x02014b50), ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(nb.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(offset)]), nb);
+      offset += local.length + nb.length + data.length;
+    }
+    const cdSize = central.reduce((a, c) => a + c.length, 0);
+    const end = new Uint8Array([...u32(0x06054b50), ...u16(0), ...u16(0), ...u16(Object.keys(files).length), ...u16(Object.keys(files).length), ...u32(cdSize), ...u32(offset), ...u16(0)]);
+    const all = [...chunks, ...central, end];
+    const out = new Uint8Array(all.reduce((a, c) => a + c.length, 0));
+    let p = 0; all.forEach((c) => { out.set(c, p); p += c.length; });
+    return out;
+  };
+})();
+
+</script>
+<script>
+/* ChaLLengErs — UI controller. Everything runs in the browser; nothing is sent anywhere unless you use an AI. */
+(function () {
+  const CH = window.CH;
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const KEY = "challengers.v1";
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+
+  /* ---------- state ---------- */
+  const defaults = () => ({
+    job: clone(CH.SAMPLE_JOB),
+    profile: clone(CH.SAMPLE_PROFILE),
+    settings: { country: "FI", lang: "en", template: "modern", accent: "#1f3a5f", order: "auto", showPhoto: false, photo: "", showDob: false, showNationality: false, gdpr: false, coverLetter: true },
+    instructions: "", output: "json", cover: "", tracker: [], isExample: true, tab: "job",
+  });
+  let state = defaults();
+  let undoStack = null;
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (saved && saved.profile) state = { ...defaults(), ...saved, settings: { ...defaults().settings, ...saved.settings } };
+  } catch (e) { /* storage unavailable: start with defaults */ }
+
+  let saveTimer;
+  const save = () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }, 300); };
+
+  /* ---------- platform: claude.ai viewer vs normal browser ---------- */
+  const P = { downloads: null, sample: null, inClaude: !!(window.claude && window.claude.use) };
+  async function initPlatform() {
+    if (!P.inClaude) { $("#bookmarkletBox").hidden = false; buildBookmarklet(); return; }
+    try { P.downloads = await window.claude.use("downloads"); } catch (e) { P.downloads = null; }
+    try { P.sample = await window.claude.use("sample"); } catch (e) { P.sample = null; }
+    $("#claudeHere").hidden = !P.sample;
+  }
+  async function saveFile(name, data, mime) {
+    if (P.downloads) {
+      try { await P.downloads.save({ filename: name, data }); toast("Saved " + name); }
+      catch (e) { toast(e && e.code === "declined" ? "Download cancelled" : e && e.code === "rate_limited" ? "One moment, a save is already open" : "Download is not available here. Use Copy text instead."); }
+      return;
+    }
+    if (P.inClaude) { toast("Download is not available in this view. Use Copy text instead."); return; }
+    const url = URL.createObjectURL(new Blob([data], { type: mime }));
+    const a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast("Downloaded " + name);
+  }
+  async function copy(text, label) {
+    try { await navigator.clipboard.writeText(text); toast((label || "Text") + " copied"); }
+    catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand("copy"); } catch (_) {}
+      ta.remove();
+      toast(ok ? (label || "Text") + " copied" : "Copy blocked. Select the text and press Ctrl+C.");
+    }
+  }
+  let toastTimer;
+  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 2600); }
+
+  /* ---------- init selects ---------- */
+  Object.entries(CH.COUNTRIES).forEach(([k, c]) => $("#country").add(new Option(c.name, k)));
+  Object.entries(CH.LANG_NAMES).forEach(([k, n]) => $("#lang").add(new Option(n, k)));
+
+  /* ---------- tabs ---------- */
+  function showTab(name) {
+    state.tab = name;
+    $$(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+    $$(".panel").forEach((p) => (p.hidden = p.dataset.panel !== name));
+    if (name === "ai") $("#promptBox").value = currentPrompt();
+    if (name === "apply") renderKit();
+    save();
+  }
+  $$(".tab").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
+
+  /* ---------- bind form <-> state ---------- */
+  const fields = {
+    jobTitle: ["job", "title"], jobCompany: ["job", "company"], jobText: ["job", "text"],
+    summary: ["profile", "summary"], skills: ["profile", "skills"], languages: ["profile", "languages"], certifications: ["profile", "certifications"],
+    interests: ["profile", "interests"], rawResume: ["profile", "rawResume"], instructions: [null, "instructions"], outputFmt: [null, "output"], coverText: [null, "cover"],
+    country: ["settings", "country"], lang: ["settings", "lang"], template: ["settings", "template"], accent: ["settings", "accent"], order: ["settings", "order"],
+    showPhoto: ["settings", "showPhoto"], showDob: ["settings", "showDob"], showNationality: ["settings", "showNationality"], gdpr: ["settings", "gdpr"], coverLetter: ["settings", "coverLetter"],
+  };
+  const get = ([a, b]) => (a ? state[a][b] : state[b]);
+  const set = ([a, b], v) => { if (a) state[a][b] = v; else state[b] = v; };
+
+  function fillForm() {
+    for (const [id, path] of Object.entries(fields)) {
+      const el = document.getElementById(id);
+      if (el.type === "checkbox") el.checked = !!get(path); else el.value = get(path) ?? "";
+    }
+    $$("[data-b]").forEach((el) => (el.value = state.profile.basics[el.dataset.b] || ""));
+    renderCards("experience", "#expList", "#tplExp");
+    renderCards("education", "#eduList", "#tplEdu");
+    renderCards("projects", "#projList", "#tplProj");
+    $("#exampleBanner").hidden = !state.isExample;
+    $("#undoBtn").disabled = !undoStack;
+  }
+
+  for (const [id, path] of Object.entries(fields)) {
+    const el = document.getElementById(id);
+    el.addEventListener(el.type === "checkbox" || el.tagName === "SELECT" || el.type === "color" ? "change" : "input", () => {
+      set(path, el.type === "checkbox" ? el.checked : el.value);
+      if (id === "country") applyCountryDefaults();
+      changed();
+    });
+  }
+  $$("[data-b]").forEach((el) => el.addEventListener("input", () => { state.profile.basics[el.dataset.b] = el.value; changed(); }));
+
+  function applyCountryDefaults() {
+    const c = CH.COUNTRIES[state.settings.country];
+    state.settings.lang = c.lang; // sensible default; many tech jobs accept English, so the user can switch back
+    state.settings.gdpr = !!c.gdpr;
+    if (c.photo === "no") { state.settings.showPhoto = false; state.settings.showDob = false; }
+    $("#lang").value = state.settings.lang; $("#gdpr").checked = state.settings.gdpr;
+    $("#showPhoto").checked = state.settings.showPhoto; $("#showDob").checked = state.settings.showDob;
+  }
+
+  /* repeatable cards */
+  const blank = { experience: { title: "", company: "", location: "", start: "", end: "", bullets: "" }, education: { degree: "", school: "", location: "", start: "", end: "", details: "" }, projects: { name: "", link: "", bullets: "" } };
+  function renderCards(key, listSel, tplSel) {
+    const list = $(listSel);
+    list.innerHTML = "";
+    state.profile[key].forEach((item, i) => {
+      const node = $(tplSel).content.firstElementChild.cloneNode(true);
+      $$("[data-f]", node).forEach((el) => {
+        el.value = item[el.dataset.f] || "";
+        el.id = `${key}-${i}-${el.dataset.f}`;
+        el.addEventListener("input", () => { state.profile[key][i][el.dataset.f] = el.value; changed(); });
+      });
+      $("[data-del]", node).addEventListener("click", () => { state.profile[key].splice(i, 1); renderCards(key, listSel, tplSel); changed(); });
+      $("[data-up]", node).addEventListener("click", () => { if (i > 0) { const a = state.profile[key]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; renderCards(key, listSel, tplSel); changed(); } });
+      $("[data-down]", node).addEventListener("click", () => { const a = state.profile[key]; if (i < a.length - 1) { [a[i + 1], a[i]] = [a[i], a[i + 1]]; renderCards(key, listSel, tplSel); changed(); } });
+      list.appendChild(node);
+    });
+  }
+  $$("[data-add]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.add;
+    state.profile[k].push(clone(blank[k]));
+    fillForm(); changed();
+  }));
+
+  $("#startBlank").addEventListener("click", () => {
+    const keepTracker = state.tracker;
+    state = defaults();
+    state.tracker = keepTracker;
+    state.isExample = false;
+    state.job = { title: "", company: "", text: "" };
+    state.profile = { basics: { name: "", headline: "", email: "", phone: "", location: "", linkedin: "", website: "", workAuth: "", nationality: "", dob: "" }, summary: "", experience: [clone(blank.experience)], education: [clone(blank.education)], skills: "", languages: "", certifications: "", projects: [], interests: "", rawResume: "" };
+    state.cover = "";
+    undoStack = null;
+    fillForm(); changed(); showTab("job"); $("#jobText").focus();
+  });
+
+  /* ---------- render ---------- */
+  let renderTimer;
+  function changed() {
+    if (state.isExample) { state.isExample = false; $("#exampleBanner").hidden = true; }
+    clearTimeout(renderTimer); renderTimer = setTimeout(render, 150); save();
+  }
+  function settingsNow() { return state.settings; }
+  function currentResume() { return CH.toResume(state.profile); }
+
+  function render() {
+    const r = currentResume();
+    const s = settingsNow();
+    $("#paper").innerHTML = CH.renderHTML(r, s);
+    fitPaper();
+
+    // country notes
+    const c = CH.COUNTRIES[s.country];
+    $("#countryNotes").innerHTML = `<strong>${CH.escapeHTML(c.name)} CV conventions</strong> · ${c.pages} page(s) · photo ${c.photo === "no" ? "not expected" : "optional"}<ul>${c.notes.map((n) => "<li>" + CH.escapeHTML(n) + "</li>").join("")}</ul>`;
+
+    // job keywords
+    const kws = CH.extractKeywords(state.job.text);
+    $("#jobKeywords").innerHTML = kws.length ? kws.map((k) => `<span class="chip ${k.required ? "req" : k.optional ? "opt" : ""}">${CH.escapeHTML(CH.pretty(k.term))}</span>`).join("") : '<span class="empty">Paste a job ad to see its keywords.</span>';
+
+    // analysis
+    const a = CH.analyze(r, state.job, s);
+    const score = Math.round(a.score);
+    $("#scoreNum").textContent = score;
+    const fg = $("#ringFg");
+    fg.style.strokeDashoffset = String(326.7 * (1 - score / 100));
+    fg.style.stroke = score >= 80 ? "var(--good)" : score >= 60 ? "var(--warn)" : "var(--bad)";
+    $("#ring").setAttribute("aria-label", `ATS readiness ${score} out of 100`);
+    $("#scoreLabel").textContent = score >= 85 ? "Strong: ready to send" : score >= 70 ? "Good, a few fixes left" : score >= 50 ? "Needs work" : "Weak match";
+    $("#scoreSub").textContent = `${a.matched.length}/${a.keywords.length} job keywords · ${a.words} words · ${c.name}`;
+    $("#kwMatched").innerHTML = a.matched.slice(0, 18).map((k) => `<span class="chip ok">${CH.escapeHTML(CH.pretty(k.term))}</span>`).join("") || '<span class="empty">none yet</span>';
+    $("#kwMissing").innerHTML = a.missing.slice(0, 18).map((k) => `<button type="button" class="chip miss" data-kw="${CH.escapeHTML(k.term)}" title="Add to skills">${CH.escapeHTML(CH.pretty(k.term))}${k.required ? " *" : ""}</button>`).join("") || '<span class="empty">nothing missing</span>';
+    $("#warnings").innerHTML = a.warnings.map((w) => `<div class="warn">${CH.escapeHTML(w)}</div>`).join("");
+    $("#checkList").innerHTML = a.checks.map((ch) => `<li><span class="dot ${ch.status}"></span><span><strong>${CH.escapeHTML(ch.label)}</strong> · ${CH.escapeHTML(ch.detail)}${ch.status !== "pass" && ch.fix ? `<span class="fix">→ ${CH.escapeHTML(ch.fix)}</span>` : ""}</span><span class="pts">${ch.pts}/${ch.max}</span></li>`).join("");
+    if (state.tab === "ai") $("#promptBox").value = currentPrompt();
+  }
+
+  function fitPaper() {
+    const wrap = $("#paperWrap"), paper = $("#paper");
+    const k = Math.min(1, wrap.clientWidth / 794);
+    paper.style.transform = `scale(${k})`;
+    wrap.style.height = paper.offsetHeight * k + "px";
+  }
+  window.addEventListener("resize", fitPaper);
+
+  /* missing keyword -> add to skills (with honesty check, built into the page) */
+  $("#kwMissing").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-kw]");
+    if (!b) return;
+    const term = CH.pretty(b.dataset.kw);
+    const box = $("#addSkill");
+    box.hidden = false;
+    box.innerHTML = `<span>Add <strong>${CH.escapeHTML(term)}</strong> to your skills? Only if it's true and you can discuss it in an interview.</span><button type="button" class="btn tiny primary" id="addYes">Add</button><button type="button" class="btn tiny ghost" id="addNo">Cancel</button>`;
+    $("#addYes").onclick = () => {
+      const lines = CH.lines(state.profile.skills);
+      const label = term.length > 1 ? term.charAt(0).toUpperCase() + term.slice(1) : term;
+      if (lines.length && /:/.test(lines[0])) lines[0] = lines[0] + ", " + label; else lines.unshift(label);
+      state.profile.skills = lines.join("\n");
+      $("#skills").value = state.profile.skills;
+      box.hidden = true; changed(); toast(label + " added to skills");
+    };
+    $("#addNo").onclick = () => (box.hidden = true);
+  });
+
+  /* ---------- tailoring ---------- */
+  function showChanges(title, items) {
+    const el = $("#changes");
+    el.hidden = !items.length;
+    el.innerHTML = `<strong>${CH.escapeHTML(title)}</strong><ul>${items.slice(0, 10).map((c) => "<li>" + CH.escapeHTML(c) + "</li>").join("")}</ul>`;
+  }
+  $("#tailorBtn").addEventListener("click", () => {
+    if ((state.job.text || "").trim().length < 50) { toast("Paste the job ad first (step 1)"); showTab("job"); return; }
+    if (!state.job.title) state.job.title = CH.guessJobTitle(state.job.text);
+    undoStack = clone(state.profile);
+    const before = Math.round(CH.analyze(currentResume(), state.job, state.settings).score);
+    const { resume, changes } = CH.tailor(state.profile, state.job, state.settings);
+    state.profile = CH.resumeToProfile(resume, state.profile);
+    fillForm(); render();
+    const after = Math.round(CH.analyze(currentResume(), state.job, state.settings).score);
+    showChanges(`Tailored for ${state.job.title || "this job"}: score ${before} → ${after}`, changes.length ? changes : ["Your CV was already well ordered for this job."]);
+    $("#undoBtn").disabled = false; save();
+    toast("Tailored. Check the missing keywords next");
+  });
+  $("#undoBtn").addEventListener("click", () => {
+    if (!undoStack) return;
+    state.profile = undoStack; undoStack = null;
+    fillForm(); render(); $("#changes").hidden = true; save(); toast("Undone");
+  });
+
+  /* ---------- prompts / AI ---------- */
+  function currentPrompt(fmt) {
+    return CH.buildPrompt({ profile: state.profile, job: state.job, settings: state.settings, instructions: state.instructions, output: fmt || state.output });
+  }
+  $("#copyPrompt").addEventListener("click", () => {
+    if ((state.job.text || "").trim().length < 50) toast("Tip: paste the job ad first for a tailored result");
+    const p = currentPrompt(); $("#promptBox").value = p; copy(p, "Master prompt");
+  });
+
+  function importResult(text) {
+    const r = CH.parseAIResult(text);
+    undoStack = clone(state.profile);
+    state.profile = CH.resumeToProfile(r, state.profile);
+    if (r.coverLetter) { state.cover = r.coverLetter; $("#coverText").value = r.coverLetter; }
+    fillForm(); render(); save();
+    const ats = r.ats || {};
+    const notes = [];
+    if (ats.missingKeywords && ats.missingKeywords.length) notes.push("<strong>Missing (add only if true):</strong> " + ats.missingKeywords.map(CH.escapeHTML).join(", "));
+    if (ats.questionsForCandidate && ats.questionsForCandidate.length) notes.push("<strong>Answer these to make it stronger:</strong><ul>" + ats.questionsForCandidate.map((q) => "<li>" + CH.escapeHTML(q) + "</li>").join("") + "</ul>");
+    if (ats.notes && ats.notes.length) notes.push("<strong>Notes:</strong><ul>" + ats.notes.map((q) => "<li>" + CH.escapeHTML(q) + "</li>").join("") + "</ul>");
+    $("#aiNotes").innerHTML = notes.join("<br>");
+    $("#undoBtn").disabled = false;
+    showChanges("AI result loaded into your CV. Review every line before sending.", ["Edit anything in step 2 (You). Undo restores your previous version."]);
+  }
+  $("#importAI").addEventListener("click", () => {
+    try { importResult($("#aiAnswer").value); toast("AI result loaded"); }
+    catch (e) { toast("Could not read that answer"); $("#aiNotes").innerHTML = `<strong>Couldn't load it:</strong> ${CH.escapeHTML(e.message)} Make sure you pasted the whole reply, including the json block.`; }
+  });
+
+  let claudeCtl = null;
+  const SAMPLE_ERR = { not_granted: "Claude access was not allowed. Use the copy-prompt option instead.", rate_limited: "Too many requests right now. Wait a minute and try again.", cancelled: "Stopped." };
+  $("#claudeBtn").addEventListener("click", async () => {
+    if (!P.sample) return;
+    if ((state.job.text || "").trim().length < 50) { toast("Paste the job ad first (step 1)"); showTab("job"); return; }
+    const out = $("#claudeOut");
+    out.hidden = false; out.textContent = "Thinking… (this can take up to a minute)";
+    $("#claudeBtn").disabled = true; $("#claudeStop").hidden = false;
+    claudeCtl = new AbortController();
+    try {
+      const { text } = await P.sample(currentPrompt("json"), { modelTier: "complex", signal: claudeCtl.signal, onText: ({ text }) => { out.textContent = text; out.scrollTop = out.scrollHeight; } });
+      importResult(text);
+      out.textContent = "Done. Your CV was rewritten. Review it on the right.";
+      toast("Claude rewrote your CV");
+    } catch (e) {
+      out.textContent = (e && SAMPLE_ERR[e.code]) || (e && e.message ? "Couldn't finish: " + e.message : "Couldn't finish. Try again or use the copy-prompt option.");
+    } finally { $("#claudeBtn").disabled = false; $("#claudeStop").hidden = true; }
+  });
+  $("#claudeStop").addEventListener("click", () => claudeCtl && claudeCtl.abort());
+
+  /* cover letter */
+  $("#draftCover").addEventListener("click", () => { state.cover = CH.draftCoverLetter(currentResume(), state.job, state.settings); $("#coverText").value = state.cover; save(); toast("Draft ready. Fill in the [bracket] part"); });
+  $("#copyCover").addEventListener("click", () => copy($("#coverText").value, "Cover letter"));
+  $("#dlCover").addEventListener("click", () => saveFile(fileBase() + "_Cover_Letter.txt", $("#coverText").value || " ", "text/plain"));
+
+  /* ---------- exports ---------- */
+  const fileBase = () => ((state.profile.basics.name || "CV").trim().replace(/[^\p{L}\p{N}]+/gu, "_") + "_CV" + (state.job.company ? "_" + state.job.company.replace(/\(example\)/i, "").trim().replace(/[^\p{L}\p{N}]+/gu, "_") : "")).replace(/_+$/, "");
+  function photoBytes() {
+    const d = state.settings.photo;
+    if (!d || !state.settings.showPhoto) return null;
+    const m = d.match(/^data:image\/jpeg;base64,(.+)$/);
+    if (!m) return null;
+    return { bytes: atob(m[1]), w: state.settings.photoW || 300, h: state.settings.photoH || 360 };
+  }
+  $("#dlPdf").addEventListener("click", () => {
+    const { bytes, pages } = CH.buildPDF(currentResume(), state.settings, photoBytes());
+    saveFile(fileBase() + ".pdf", bytes, "application/pdf");
+    if (pages > 2) toast(`Your CV is ${pages} pages. Aim for 1–2.`);
+  });
+  $("#dlDocx").addEventListener("click", () => saveFile(fileBase() + ".docx", CH.buildDOCX(currentResume(), state.settings), "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+  $("#dlTxt").addEventListener("click", () => saveFile(fileBase() + ".txt", CH.renderText(currentResume(), state.settings), "text/plain"));
+  $("#copyTxt").addEventListener("click", () => copy(CH.renderText(currentResume(), state.settings), "CV text"));
+
+  $("#saveProfile").addEventListener("click", () => saveFile("challengers_profile.json", JSON.stringify({ app: "ChaLLengErs", version: 1, profile: state.profile, settings: { ...state.settings, photo: "" } }, null, 2), "application/json"));
+  $("#loadProfile").addEventListener("change", (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const o = JSON.parse(rd.result);
+        if (!o.profile || !o.profile.basics) throw new Error("bad");
+        undoStack = clone(state.profile);
+        state.profile = o.profile; if (o.settings) state.settings = { ...state.settings, ...o.settings, photo: state.settings.photo };
+        state.isExample = false; fillForm(); render(); save(); toast("Profile loaded");
+      } catch (err) { toast("That file is not a ChaLLengErs profile"); }
+    };
+    rd.readAsText(f); e.target.value = "";
+  });
+
+  /* photo: resize to a small JPEG so it fits in the PDF and in storage */
+  $("#photoFile").addEventListener("change", (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const img = new Image();
+    const url = URL.createObjectURL(f);
+    img.onload = () => {
+      const max = 360, k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+      state.settings.photo = c.toDataURL("image/jpeg", 0.86); state.settings.photoW = c.width; state.settings.photoH = c.height;
+      state.settings.showPhoto = true; $("#showPhoto").checked = true;
+      URL.revokeObjectURL(url); changed(); toast("Photo added");
+      if (CH.COUNTRIES[state.settings.country].photo === "no") toast("Note: photos are not expected in " + CH.COUNTRIES[state.settings.country].name);
+    };
+    img.onerror = () => toast("Could not read that image");
+    img.src = url; e.target.value = "";
+  });
+
+  /* ---------- apply kit + tracker ---------- */
+  function renderKit() {
+    const r = currentResume(), b = r.basics;
+    const items = [["Name", b.name], ["Email", b.email], ["Phone", b.phone], ["City", b.location], ["LinkedIn", b.linkedin], ["Website", b.website], ["Work authorization", b.workAuth], ["Headline", b.headline], ["Summary", r.summary],
+      ...r.experience.map((e) => [`${e.title} @ ${e.company}`, `${e.title}, ${e.company} (${e.start} – ${e.end})\n` + e.bullets.map((x) => "• " + x).join("\n")]),
+      ...r.education.map((e) => [e.degree || e.school, `${e.degree}, ${e.school} (${e.start} – ${e.end})`]),
+      ["Skills", r.skills.map((s) => s.items.join(", ")).join(", ")], ["Languages", r.languages.map((l) => l.name + " " + l.level).join(", ")], ["Cover letter", state.cover], ["Whole CV (text)", CH.renderText(r, state.settings)]]
+      .filter(([, v]) => v && String(v).trim());
+    const kit = $("#kit");
+    kit.innerHTML = "";
+    items.forEach(([label, value]) => {
+      const btn = document.createElement("button");
+      btn.type = "button"; btn.className = "btn ghost"; btn.textContent = "⧉ " + label; btn.title = String(value).slice(0, 200);
+      btn.addEventListener("click", () => copy(String(value), label));
+      kit.appendChild(btn);
+    });
+    renderTracker();
+  }
+  const STATUSES = ["Saved", "Applied", "Interview", "Offer", "Rejected"];
+  function renderTracker() {
+    const list = $("#trackList");
+    if (!state.tracker.length) { list.innerHTML = '<p class="empty">No applications yet. Add the jobs you apply to and keep track of where each one stands.</p>'; return; }
+    list.innerHTML = "";
+    state.tracker.forEach((t, i) => {
+      const row = document.createElement("div");
+      row.className = "track-row";
+      row.innerHTML = `<div><strong>${CH.escapeHTML(t.company)}</strong> · ${CH.escapeHTML(t.role)} <span class="date">${CH.escapeHTML(t.date)}</span></div>`;
+      const sel = document.createElement("select");
+      sel.id = "track-status-" + i; sel.setAttribute("aria-label", "Status for " + t.company);
+      STATUSES.forEach((s) => sel.add(new Option(s, s, false, s === t.status)));
+      sel.addEventListener("change", () => { t.status = sel.value; save(); });
+      const del = document.createElement("button");
+      del.type = "button"; del.className = "btn tiny danger"; del.textContent = "Remove";
+      del.addEventListener("click", () => { state.tracker.splice(i, 1); save(); renderTracker(); });
+      row.append(sel, del); list.appendChild(row);
+    });
+  }
+  const today = () => new Date().toISOString().slice(0, 10);
+  $("#trackForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    state.tracker.unshift({ company: $("#tCompany").value.trim(), role: $("#tRole").value.trim(), status: $("#tStatus").value, date: today() });
+    $("#tCompany").value = ""; $("#tRole").value = ""; save(); renderTracker();
+  });
+  $("#trackCurrent").addEventListener("click", () => {
+    if (!state.job.company && !state.job.title) { toast("Add a job title or company in step 1 first"); return; }
+    state.tracker.unshift({ company: (state.job.company || "—").replace(/\s*\(example\)/i, ""), role: state.job.title || "—", status: "Applied", date: today() });
+    save(); renderTracker(); toast("Added to your applications");
+  });
+
+  /* ---------- bookmarklet + incoming jobs (normal web hosting only) ---------- */
+  function buildBookmarklet() {
+    const target = location.href.split("#")[0];
+    const code = `(function(){var s=String(getSelection()).trim();var sel=['.jobs-description__content','.jobs-description','#job-details','#jobDescriptionText','[data-testid=jobsearch-JobComponent-description]','[data-at=job-ad-content]','[data-automation=jobAdDetails]','[class*=job-description]','[class*=JobDescription]','[class*=jobDescription]','article','main'];var t=s.length>150?s:'';for(var i=0;!t&&i<sel.length;i++){var e=document.querySelector(sel[i]);if(e&&e.innerText.trim().length>300)t=e.innerText.trim();}if(!t)t=document.body.innerText;var h=document.querySelector('h1');var d={title:h?h.innerText.trim().slice(0,120):document.title.slice(0,120),company:'',text:t.slice(0,7000),url:location.href};var j=btoa(unescape(encodeURIComponent(JSON.stringify(d)))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');window.open('${target}#job='+j,'_blank');})();`;
+    $("#bookmarklet").setAttribute("href", "javascript:" + encodeURIComponent(code));
+    $("#bookmarklet").addEventListener("click", (e) => { e.preventDefault(); toast("Drag this button to your bookmarks bar"); });
+  }
+  function takeIncoming() {
+    let data = null;
+    const m = location.hash.match(/^#job=([A-Za-z0-9_-]+)/);
+    if (m) {
+      try { data = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g, "+").replace(/_/g, "/"))))); } catch (e) { data = null; }
+      try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* ignore */ }
+    }
+    try { const inc = localStorage.getItem("challengers.incoming"); if (inc) { data = JSON.parse(inc); localStorage.removeItem("challengers.incoming"); } } catch (e) { /* ignore */ }
+    if (data && data.text) {
+      state.job = { title: data.title || CH.guessJobTitle(data.text), company: data.company || "", text: data.text };
+      if (state.isExample) { state.isExample = false; }
+      toast("Job ad received. Tailor your CV in step 3");
+    }
+  }
+
+  /* ---------- boot ---------- */
+  takeIncoming();
+  fillForm();
+  showTab(state.tab || "job");
+  render();
+  initPlatform();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitPaper);
+})();
+
+</script>

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ChaLLengErs</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="ChaLLengErs: a free European CV builder that tailors your CV to each job, scores it against ATS checks and exports PDF and DOCX. Works with ChatGPT, Claude and Gemini.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-label="ChaLLengErs">Cha<b>LL</b>eng<b>E</b>rs</span>
+      <span class="tag">Free CV builder for European jobs · tailored to each job ad · checked against ATS rules</span>
+    </div>
+    <nav class="toplinks">
+      <span class="pill-free">100% free · no sign-up · your data stays in your browser</span>
+    </nav>
+  </header>
+
+  <div id="exampleBanner" class="banner" hidden>
+    <span>You are looking at an <strong>example</strong> (Alex Example, a sample job ad). Replace it with your own details.</span>
+    <button type="button" class="btn small ghost" id="startBlank">Start blank</button>
+  </div>
+
+  <main class="grid">
+    <!-- LEFT: editor -->
+    <section class="editor" aria-label="Editor">
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" class="tab" data-tab="job" aria-selected="true"><span class="step">1</span>Job</button>
+        <button type="button" role="tab" class="tab" data-tab="you"><span class="step">2</span>You</button>
+        <button type="button" role="tab" class="tab" data-tab="ai"><span class="step">3</span>Tailor &amp; AI</button>
+        <button type="button" role="tab" class="tab" data-tab="design"><span class="step">4</span>Design</button>
+        <button type="button" role="tab" class="tab" data-tab="apply"><span class="step">5</span>Apply</button>
+      </div>
+
+      <!-- JOB -->
+      <div class="panel" data-panel="job">
+        <div class="row2">
+          <label>Job title<input id="jobTitle" placeholder="e.g. Junior Data Analyst"></label>
+          <label>Company<input id="jobCompany" placeholder="e.g. Nordlys Analytics"></label>
+        </div>
+        <div class="row2">
+          <label>Country of the job<select id="country"></select></label>
+          <label>CV language<select id="lang"></select></label>
+        </div>
+        <label>Job ad <span class="hint">Paste the full text, including requirements.</span>
+          <textarea id="jobText" rows="12" placeholder="Paste the job advertisement here…"></textarea>
+        </label>
+        <div id="countryNotes" class="notes"></div>
+        <div class="kw-block">
+          <h3>What the ATS will look for</h3>
+          <p class="hint">Keywords pulled from the ad. <span class="chip req">required</span> <span class="chip opt">nice to have</span></p>
+          <div id="jobKeywords" class="chips"></div>
+        </div>
+      </div>
+
+      <!-- YOU -->
+      <div class="panel" data-panel="you" hidden>
+        <fieldset>
+          <legend>Contact</legend>
+          <div class="row2">
+            <label>Full name<input data-b="name"></label>
+            <label>Headline / current title<input data-b="headline" placeholder="e.g. Business Analytics Student"></label>
+            <label>Email<input data-b="email" type="email"></label>
+            <label>Phone<input data-b="phone"></label>
+            <label>City, Country<input data-b="location"></label>
+            <label>LinkedIn<input data-b="linkedin"></label>
+            <label>Website / GitHub / portfolio<input data-b="website"></label>
+            <label>Work authorization<input data-b="workAuth" placeholder="e.g. EU citizen · or · Residence permit, no sponsorship needed"></label>
+            <label>Nationality <span class="hint">optional</span><input data-b="nationality"></label>
+            <label>Date of birth <span class="hint">optional</span><input data-b="dob" placeholder="DD.MM.YYYY"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Summary</legend>
+          <textarea id="summary" rows="4" placeholder="2–4 lines. Leave empty and “Instant tailor” writes a draft from your real skills."></textarea>
+        </fieldset>
+        <fieldset>
+          <legend>Work experience</legend>
+          <div id="expList" class="cards"></div>
+          <button type="button" class="btn small ghost" data-add="experience">+ Add job</button>
+        </fieldset>
+        <fieldset>
+          <legend>Education</legend>
+          <div id="eduList" class="cards"></div>
+          <button type="button" class="btn small ghost" data-add="education">+ Add education</button>
+        </fieldset>
+        <fieldset>
+          <legend>Skills <span class="hint">One line per group: <code>Data: SQL, Python, Excel</code></span></legend>
+          <textarea id="skills" rows="4"></textarea>
+        </fieldset>
+        <div class="row2">
+          <fieldset>
+            <legend>Languages <span class="hint"><code>Finnish — B1</code></span></legend>
+            <textarea id="languages" rows="3"></textarea>
+          </fieldset>
+          <fieldset>
+            <legend>Certifications <span class="hint"><code>Name | 2025</code></span></legend>
+            <textarea id="certifications" rows="3"></textarea>
+          </fieldset>
+        </div>
+        <fieldset>
+          <legend>Projects</legend>
+          <div id="projList" class="cards"></div>
+          <button type="button" class="btn small ghost" data-add="projects">+ Add project</button>
+        </fieldset>
+        <fieldset>
+          <legend>Interests <span class="hint">optional, one line</span></legend>
+          <input id="interests" placeholder="e.g. Trail running, volunteering at Helsinki Food Bank">
+        </fieldset>
+        <fieldset>
+          <legend>Old CV or extra notes <span class="hint">Only sent to AI. Paste anything: old CV, achievements, numbers.</span></legend>
+          <textarea id="rawResume" rows="5" placeholder="Paste your current CV text or LinkedIn 'About' here. The AI uses it as a source of facts."></textarea>
+        </fieldset>
+        <div class="btnrow">
+          <button type="button" class="btn ghost" id="saveProfile">Save profile file (.json)</button>
+          <label class="btn ghost filebtn">Load profile file<input type="file" id="loadProfile" accept=".json,application/json"></label>
+        </div>
+      </div>
+
+      <!-- AI -->
+      <div class="panel" data-panel="ai" hidden>
+        <div class="callout">
+          <h3>Instant tailor <span class="chip free">free · offline</span></h3>
+          <p>Moves your most relevant bullets to the top, puts matching skills first, replaces weak openers like “Responsible for” and drafts a summary. It only uses facts you entered and never adds skills you don't have.</p>
+          <div class="btnrow"><button type="button" class="btn primary" id="tailorBtn">Tailor my CV to this job</button><button type="button" class="btn ghost" id="undoBtn" disabled>Undo</button></div>
+        </div>
+
+        <div class="callout" id="claudeHere" hidden>
+          <h3>Rewrite with Claude, right here <span class="chip free">uses your claude.ai account</span></h3>
+          <p>Claude rewrites the whole CV with the ChaLLengErs master prompt and loads the result into the editor. The first time, Claude asks you to allow it.</p>
+          <div class="btnrow"><button type="button" class="btn primary" id="claudeBtn">Write my CV with Claude</button><button type="button" class="btn ghost" id="claudeStop" hidden>Stop</button></div>
+          <pre id="claudeOut" class="stream" hidden></pre>
+        </div>
+
+        <div class="callout">
+          <h3>Use any free AI chat <span class="chip free">ChatGPT · Claude · Gemini · Le Chat</span></h3>
+          <ol class="steps">
+            <li>Add your own instructions (optional).</li>
+            <li>Copy the master prompt and paste it into any AI chat.</li>
+            <li>Paste the AI's answer back below. ChaLLengErs loads it, scores it and exports PDF/DOCX.</li>
+          </ol>
+          <label>Your instructions <span class="hint">e.g. “Focus on leadership. Keep it to one page. I'm switching from hospitality to data.”</span>
+            <textarea id="instructions" rows="3"></textarea>
+          </label>
+          <div class="row2">
+            <label>The AI should answer as<select id="outputFmt"><option value="json">JSON to paste back here (recommended)</option><option value="text">Finished text to copy directly</option></select></label>
+            <label class="check"><input type="checkbox" id="coverLetter"> Also write a cover letter</label>
+          </div>
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="copyPrompt">Copy master prompt</button>
+            <a class="btn ghost" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT ↗</a>
+            <a class="btn ghost" href="https://claude.ai/new" target="_blank" rel="noopener">Claude ↗</a>
+            <a class="btn ghost" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini ↗</a>
+            <a class="btn ghost" href="https://chat.mistral.ai/chat" target="_blank" rel="noopener">Le Chat ↗</a>
+          </div>
+          <details><summary>Show the prompt</summary><textarea id="promptBox" rows="10" readonly></textarea></details>
+          <label>Paste the AI's answer<textarea id="aiAnswer" rows="6" placeholder='Paste the whole reply (the ```json … ``` block) here'></textarea></label>
+          <div class="btnrow"><button type="button" class="btn primary" id="importAI">Load AI result into my CV</button></div>
+          <div id="aiNotes" class="notes"></div>
+        </div>
+
+        <div class="callout">
+          <h3>Cover letter</h3>
+          <div class="btnrow"><button type="button" class="btn ghost" id="draftCover">Draft from my CV (free)</button><button type="button" class="btn ghost" id="copyCover">Copy</button><button type="button" class="btn ghost" id="dlCover">Download .txt</button></div>
+          <textarea id="coverText" rows="10" placeholder="Your cover letter appears here. Edit freely."></textarea>
+        </div>
+      </div>
+
+      <!-- DESIGN -->
+      <div class="panel" data-panel="design" hidden>
+        <div class="row2">
+          <label>Template<select id="template"><option value="modern">Modern (left-aligned)</option><option value="classic">Classic (centered)</option><option value="compact">Compact (fits more on a page)</option></select></label>
+          <label>Accent colour<input type="color" id="accent" value="#1f3a5f"></label>
+          <label>Section order<select id="order"><option value="auto">Automatic</option><option value="experience">Experience first</option><option value="education">Education first (students)</option></select></label>
+        </div>
+        <fieldset>
+          <legend>Personal details <span class="hint">Follow the country notes. Leaving these out is the safest choice.</span></legend>
+          <label class="check"><input type="checkbox" id="showPhoto"> Show photo</label>
+          <label class="btn ghost small filebtn">Upload photo<input type="file" id="photoFile" accept="image/*"></label>
+          <label class="check"><input type="checkbox" id="showDob"> Show date of birth</label>
+          <label class="check"><input type="checkbox" id="showNationality"> Show nationality</label>
+          <label class="check"><input type="checkbox" id="gdpr"> Add GDPR consent clause</label>
+        </fieldset>
+        <div class="notes">All templates are single-column, use standard headings and a standard font, and export real text (not images), which is what ATS parsers need.</div>
+      </div>
+
+      <!-- APPLY -->
+      <div class="panel" data-panel="apply" hidden>
+        <div class="callout">
+          <h3>Apply kit</h3>
+          <p>Click to copy, then paste into the employer's application form. Faster than retyping, and safer than auto-apply bots, which can get your account flagged.</p>
+          <div id="kit" class="kit"></div>
+        </div>
+        <div class="callout">
+          <h3>My applications</h3>
+          <form id="trackForm" class="row4">
+            <input id="tCompany" placeholder="Company" required>
+            <input id="tRole" placeholder="Role" required>
+            <select id="tStatus"><option>Saved</option><option>Applied</option><option>Interview</option><option>Offer</option><option>Rejected</option></select>
+            <button class="btn primary" type="submit">Add</button>
+          </form>
+          <button type="button" class="btn small ghost" id="trackCurrent">+ Add current job</button>
+          <div id="trackList" class="track"></div>
+        </div>
+        <div class="callout" id="bookmarkletBox" hidden>
+          <h3>Grab job ads from any site</h3>
+          <p>Drag this button to your bookmarks bar. On LinkedIn, Indeed, Duunitori, StepStone or any job page, select the ad text (or nothing) and click it. The ad opens here, ready to tailor.</p>
+          <a id="bookmarklet" class="btn primary" href="#">＋ Send to ChaLLengErs</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: score + preview -->
+    <section class="output" aria-label="Result">
+      <div class="scorecard">
+        <div class="ring" id="ring" role="img" aria-label="ATS score"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring-fg" id="ringFg"/></svg><div class="ring-num"><span id="scoreNum">0</span><small>/100</small></div></div>
+        <div class="score-text">
+          <div class="score-label" id="scoreLabel">ATS readiness</div>
+          <div class="score-sub" id="scoreSub"></div>
+          <div class="kwline"><span class="mono">Matched</span> <span id="kwMatched" class="chips"></span></div>
+          <div class="kwline"><span class="mono">Missing</span> <span id="kwMissing" class="chips"></span></div>
+          <div id="addSkill" class="confirm" hidden></div>
+        </div>
+      </div>
+      <div id="warnings" class="warnings"></div>
+      <details class="checks"><summary>Score breakdown</summary><ul id="checkList"></ul></details>
+      <div id="changes" class="changes" hidden></div>
+
+      <div class="exportbar">
+        <button type="button" class="btn primary" id="dlPdf">Download PDF</button>
+        <button type="button" class="btn ghost" id="dlDocx">Word (.docx)</button>
+        <button type="button" class="btn ghost" id="dlTxt">Text (.txt)</button>
+        <button type="button" class="btn ghost" id="copyTxt">Copy text</button>
+      </div>
+      <div class="paper-wrap" id="paperWrap"><div class="paper" id="paper"></div></div>
+      <p class="fine">ATS readiness is an estimate from widely used rules: keyword match, structure, readability. No tool can guarantee a pass on every system. Every fact on your CV must be true.</p>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</div>
+
+<template id="tplExp">
+  <div class="card">
+    <div class="row2">
+      <label>Job title<input data-f="title"></label>
+      <label>Company<input data-f="company"></label>
+      <label>Location<input data-f="location"></label>
+      <div class="row2 tight"><label>Start<input data-f="start" placeholder="MM/YYYY"></label><label>End<input data-f="end" placeholder="MM/YYYY or Present"></label></div>
+    </div>
+    <label>Achievements <span class="hint">one per line · start with a verb · add numbers</span><textarea data-f="bullets" rows="4"></textarea></label>
+    <div class="cardtools"><button type="button" class="btn tiny ghost" data-up>↑</button><button type="button" class="btn tiny ghost" data-down>↓</button><button type="button" class="btn tiny danger" data-del>Remove</button></div>
+  </div>
+</template>
+<template id="tplEdu">
+  <div class="card">
+    <div class="row2">
+      <label>Degree / qualification<input data-f="degree"></label>
+      <label>School<input data-f="school"></label>
+      <label>Location<input data-f="location"></label>
+      <div class="row2 tight"><label>Start<input data-f="start" placeholder="MM/YYYY"></label><label>End<input data-f="end" placeholder="MM/YYYY"></label></div>
+    </div>
+    <label>Details <span class="hint">thesis, relevant courses, GPA, honours</span><input data-f="details"></label>
+    <div class="cardtools"><button type="button" class="btn tiny ghost" data-up>↑</button><button type="button" class="btn tiny ghost" data-down>↓</button><button type="button" class="btn tiny danger" data-del>Remove</button></div>
+  </div>
+</template>
+<template id="tplProj">
+  <div class="card">
+    <div class="row2">
+      <label>Project name<input data-f="name"></label>
+      <label>Link<input data-f="link"></label>
+    </div>
+    <label>What you did and the result <span class="hint">one per line</span><textarea data-f="bullets" rows="3"></textarea></label>
+    <div class="cardtools"><button type="button" class="btn tiny ghost" data-up>↑</button><button type="button" class="btn tiny ghost" data-down>↓</button><button type="button" class="btn tiny danger" data-del>Remove</button></div>
+  </div>
+</template>
+
+<script src="js/fontmetrics.js"></script>
+<script src="js/data.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/prompt.js"></script>
+<script src="js/exporters.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
