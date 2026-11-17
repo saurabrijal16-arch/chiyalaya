@@ -126,3 +126,51 @@ ${outputSpec}`;
     };
   };
 })();
+
+/* ---------- AI toolkit: each tool works with Claude in-page or any chat AI via copy/paste ---------- */
+(function () {
+  const CH = window.CH;
+  const ctx = (s) => {
+    const r = CH.toResume(s.profile);
+    const country = (CH.COUNTRIES[s.settings.country] || CH.COUNTRIES.EU).name;
+    const jobBlock = (s.job.text || "").trim() ? `TARGET JOB: ${s.job.title || ""} at ${s.job.company || ""} (${country})\nJob ad:\n"""\n${s.job.text.trim().slice(0, 9000)}\n"""` : `TARGET COUNTRY: ${country}`;
+    return { r, country, jobBlock, cv: JSON.stringify(r), lang: CH.LANG_NAMES[s.settings.lang] || "English" };
+  };
+  const TRUTH = "Use only facts from the candidate data. Never invent employers, dates, skills, tools or numbers.";
+  const JSON_OUT = "Return ONLY one JSON object in a single ```json code block, in exactly this shape:\n" + CH.SCHEMA_EXAMPLE;
+
+  CH.TOOLS = [
+    { id: "import", label: "Import my old CV / LinkedIn", out: "json", desc: "Turns the text in “Old CV or extra notes” (paste your CV or your LinkedIn profile, or upload a file) into a clean, structured profile.",
+      build: (s) => `You are a precise CV parser. Convert the candidate's text below into structured data. Keep every fact, fix obvious typos, rewrite nothing else. Dates as MM/YYYY when the month is known, otherwise YYYY. Split each job's duties/achievements into separate bullets. Languages with CEFR level if stated.\n\nCANDIDATE TEXT:\n"""\n${(s.profile.rawResume || "").slice(0, 15000) || "(empty: ask the user to paste their CV)"}\n"""\n\n${JSON_OUT}` },
+    { id: "translate", label: "Translate my CV", out: "json", desc: "Translates all CV content into the CV language chosen in step 1, using natural, professional local phrasing.",
+      build: (s) => { const c = ctx(s); return `Translate this CV into ${c.lang} for a job in ${c.country}. Use natural professional phrasing a local recruiter expects, keep tool names, company names and proper nouns unchanged, keep dates. ${TRUTH}\n\nCV:\n${c.cv}\n\n${JSON_OUT}`; } },
+    { id: "cover", label: "Cover letter", out: "cover", desc: "A specific, non-generic cover letter (max 250 words) in the CV language.",
+      build: (s) => { const c = ctx(s); return `Write a cover letter in ${c.lang} for this job. Max 250 words, 3–4 short paragraphs: a hook naming the role and one strong proof point, 2 achievements mapped to the top requirements (mirror the ad's keywords), why this company specifically, a confident close. Tone suited to ${c.country}. No clichés ("I am writing to apply", "team player", "passionate"). ${TRUTH} If something specific about the company is needed but unknown, write [one specific thing about the company]. Return only the letter.\n\n${c.jobBlock}\n\nCANDIDATE CV:\n${c.cv}`; } },
+    { id: "interview", label: "Interview questions + model answers", out: "text", desc: "The 12 most likely questions for this job with model STAR answers built from your real CV.",
+      build: (s) => { const c = ctx(s); return `You are a senior hiring manager in ${c.country}. Predict the 12 most likely interview questions for this job (mix: motivation, technical/role, behavioural, the candidate's gaps, practical such as salary and right to work). For each give: the question, what the interviewer is really testing, and a model answer in first person using STAR, built ONLY from the candidate's real experience (about 120 words). Flag gaps honestly and show how to handle them. End with 5 smart questions the candidate should ask. ${TRUTH}\n\n${c.jobBlock}\n\nCANDIDATE CV:\n${c.cv}`; } },
+    { id: "linkedin", label: "LinkedIn headline & About", out: "text", desc: "A keyword-rich LinkedIn headline, About section and top skills, so recruiters find you.",
+      build: (s) => { const c = ctx(s); return `Optimise this candidate's LinkedIn profile for recruiters searching for roles like the target job. Give: 3 headline options (max 220 characters, keyword-rich), an About section (max 1,800 characters, first person, hook in the first 2 lines, keywords, a call to action), the 10 best skills to list, and 3 quick wins. ${TRUTH}\n\n${c.jobBlock}\n\nCANDIDATE CV:\n${c.cv}`; } },
+    { id: "recruiter", label: "Message to recruiter", out: "text", desc: "A short LinkedIn message or email to the recruiter or hiring manager.",
+      build: (s) => { const c = ctx(s); return `Write 2 versions of a short message (max 90 words each) from the candidate to the recruiter or hiring manager for this job: one LinkedIn connection note (max 280 characters) and one email with subject line. Specific, polite, one proof point, clear ask. Language: ${c.lang}. ${TRUTH}\n\n${c.jobBlock}\n\nCANDIDATE CV:\n${c.cv}`; } },
+    { id: "followup", label: "Follow-up & thank-you emails", out: "text", desc: "A follow-up one week after applying, and a thank-you note after an interview.",
+      build: (s) => { const c = ctx(s); return `Write (1) a polite follow-up email 7–10 days after applying with no reply, and (2) a thank-you email to send within 24 hours after an interview that references one topic discussed as [topic we discussed]. Each max 120 words with a subject line, in ${c.lang}, tone suited to ${c.country}.\n\n${c.jobBlock}\n\nCANDIDATE: ${c.r.basics.name || ""}, ${c.r.basics.headline || ""}`; } },
+    { id: "gap", label: "Skill-gap plan (30 days)", out: "text", desc: "What you are missing for this job and a free 30-day plan to close the gap.",
+      build: (s) => { const c = ctx(s); return `Compare the candidate with the job. List: strengths to emphasise, missing must-haves, missing nice-to-haves. Then a realistic 30-day plan using free resources (official docs, free courses, a small portfolio project that proves the skill, with a one-line CV bullet the candidate could honestly add once done). Be specific and honest.\n\n${c.jobBlock}\n\nCANDIDATE CV:\n${c.cv}`; } },
+  ];
+
+  CH.mockInterviewIntro = function (s) {
+    const r = CH.toResume(s.profile);
+    const country = (CH.COUNTRIES[s.settings.country] || CH.COUNTRIES.EU).name;
+    return `You are a realistic, friendly but demanding interviewer for the job below in ${country}. Run a mock interview with me.
+Rules: ask ONE question at a time and wait for my answer. After each answer, give feedback in this format:
+Score: x/5 · What worked: … · Improve: … · Stronger version: (2–3 sentences using only facts from my CV)
+Then ask the next question. Mix motivation, role-specific, behavioural (STAR) and one question about my biggest gap. After 6 questions, give a final verdict: overall score /10, top 3 strengths, top 3 fixes, and whether I would move to the next round.
+Start now with a one-line greeting and your first question.
+
+JOB: ${s.job.title || ""} at ${s.job.company || ""}
+${(s.job.text || "").trim().slice(0, 7000)}
+
+MY CV:
+${JSON.stringify(r)}`;
+  };
+})();

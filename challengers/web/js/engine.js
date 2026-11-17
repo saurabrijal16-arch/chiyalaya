@@ -264,7 +264,7 @@
     if (/right to work|work permit|eligib|residence permit|visa/i.test(job.text || "") && !b.workAuth) warnings.push("The ad mentions right to work. Add your work authorization status.");
 
     const score = checks.reduce((a, c) => a + c.pts, 0);
-    return { score, checks, matched, missing, keywords: kws, warnings, words };
+    return { score, checks, matched, missing, keywords: kws, warnings, words, fit: Math.round(kwRatio * 100) };
   };
 
   /* ---------- cover letter draft (no AI) ---------- */
@@ -288,4 +288,114 @@
 
   CH.lines = lines;
   CH.list = list;
+})();
+
+/* ---------- interview coach, CV text import, pipeline scoring ---------- */
+(function () {
+  const CH = window.CH;
+
+  CH.interviewQuestions = function (r, job, settings) {
+    const a = CH.analyze(r, job, settings || {});
+    const company = (job.company || "the company").replace(/\s*\(example\)/i, "");
+    const title = job.title || "this role";
+    const country = (CH.COUNTRIES[(settings || {}).country] || CH.COUNTRIES.EU).name;
+    const out = [];
+    const add = (cat, q, tip) => out.push({ cat, q, tip });
+    add("Opening", "Tell me about yourself.", `60–90 seconds: present (${r.basics.headline || "who you are"}), past (1–2 proof points with numbers), future (why ${title} at ${company}).`);
+    add("Motivation", `Why do you want to work at ${company}?`, "Name one specific product, value or project of theirs and connect it to something you have done.");
+    add("Motivation", `Why are you a good fit for the ${title} role?`, `Pick the 3 requirements you match best: ${a.matched.filter((k) => k.kind !== "word").slice(0, 3).map((k) => CH.pretty(k.term)).join(", ") || "the top requirements"}. Give one example for each.`);
+    if (r.basics.location && !r.basics.location.toLowerCase().includes(country.toLowerCase().split(" ")[0]) && country.indexOf("Europe") < 0)
+      add("Motivation", `Why do you want to move to / work in ${country}?`, "Show commitment: language learning, a connection to the country, long-term plans.");
+    a.matched.filter((k) => k.kind === "skill").slice(0, 4).forEach((k) =>
+      add("Role & skills", `Walk me through a project where you used ${CH.pretty(k.term)}.`, "Use STAR. Name the tool, the size of the data/problem and the measurable result."));
+    a.missing.filter((k) => k.required && k.kind !== "word").slice(0, 3).forEach((k) =>
+      add("Gap", `This role needs ${CH.pretty(k.term)}. What is your experience with it?`, "Be honest. Show the closest thing you have done and a concrete plan to learn it (course, project, timeline)."));
+    r.experience.flatMap((e) => (e.bullets || []).filter(CH.hasMetric).slice(0, 1).map((b) => [e, b])).slice(0, 3).forEach(([e, b]) =>
+      add("Your CV", `At ${e.company} you wrote: “${b}”. How exactly did you achieve that?`, "Expect follow-ups on numbers. Know the before/after, your exact part and what you would do differently."));
+    CH.BEHAVIOURAL.forEach(([q, comp]) => add("Behavioural", q, `They test: ${comp}. Answer in STAR (Situation, Task, Action, Result), about 2 minutes.`));
+    a.keywords.filter((k) => k.kind === "language").forEach((k) =>
+      add("Practical", `The ad mentions ${CH.pretty(k.term)}. How would you rate your level?`, "Give your CEFR level honestly and what you are doing to improve. Be ready to answer one question in that language."));
+    if (/right to work|permit|visa|eligib/i.test(job.text || "") || r.basics.workAuth) add("Practical", "Do you have the right to work here?", r.basics.workAuth ? `Short and clear: “${r.basics.workAuth}.”` : "State your permit status clearly and whether you need sponsorship.");
+    add("Practical", "What are your salary expectations?", "Research the local range first (union tables, Glassdoor, Palkkadata in Finland). Give a range and say whether it is gross monthly or annual.");
+    add("Practical", "When could you start?", "Give a concrete date or notice period.");
+    add("Closing", "Do you have any questions for us?", "Always ask 2–3. Ideas: " + CH.ASK_THEM.slice(0, 3).join(" · "));
+    return out;
+  };
+
+  /* Heuristic import of an old CV / LinkedIn text into the profile form (no AI). */
+  const HEAD = {
+    summary: /^(summary|profile|professional summary|about( me)?|objective|profiili|tiivistelmä|profil|kurzprofil|perfil|profilo)\b/i,
+    experience: /^(work experience|experience|employment( history)?|professional experience|work history|työkokemus|berufserfahrung|arbetslivserfarenhet|expérience|experiencia|esperienza|werkervaring|doświadczenie)/i,
+    education: /^(education|academic|qualifications|koulutus|ausbildung|bildung|utbildning|formation|formación|istruzione|opleiding|wykształcenie)/i,
+    skills: /^(skills|technical skills|core skills|competenc|key skills|taidot|osaaminen|kenntnisse|fähigkeiten|kompetenser|compétences|habilidades|competenze|vaardigheden|umiejętności)/i,
+    languages: /^(languages?|kielitaito|kielet|sprachen|språk|langues|idiomas|lingue|talen|języki)/i,
+    certifications: /^(certifications?|certificates|licenses|licences|courses|sertifikaatit|zertifikate)/i,
+    projects: /^(projects?|projektit|projekte|projets|proyectos|progetti)/i,
+    interests: /^(interests|hobbies|harrastukset|interessen|intressen)/i,
+  };
+  const DATE_RANGE = /((\d{1,2}[\/.]\d{4}|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.? \d{4}|\b(19|20)\d{2})\s*[-–—to]+\s*(\d{1,2}[\/.]\d{4}|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.? \d{4}|\b(19|20)\d{2}|present|current|now|today|nykyään|heute|jatkuu))/i;
+
+  CH.importText = function (text) {
+    const raw = String(text || "").replace(/\r/g, "");
+    const L = raw.split("\n").map((l) => l.trim()).filter(Boolean);
+    const p = { basics: { name: "", headline: "", email: "", phone: "", location: "", linkedin: "", website: "", workAuth: "", nationality: "", dob: "" }, summary: "", experience: [], education: [], skills: "", languages: "", certifications: "", projects: [], interests: "", rawResume: raw };
+    const email = raw.match(/[\w.+-]+@[\w-]+\.[\w.-]+/); if (email) p.basics.email = email[0];
+    const phone = raw.match(/(\+\d{1,3}[\s-]?)?(\(?\d{2,4}\)?[\s-]?)\d{3,4}[\s-]?\d{3,4}/); if (phone) p.basics.phone = phone[0].trim();
+    const li = raw.match(/(https?:\/\/)?(www\.)?linkedin\.com\/in\/[\w\-%]+/i); if (li) p.basics.linkedin = li[0].replace(/^https?:\/\/(www\.)?/, "");
+    const web = raw.replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, " ").match(/(https?:\/\/)?(www\.)?(github\.com|gitlab\.com|behance\.net|[\w-]+\.(dev|io|me|fi|com))\/?[\w\-/.]*/i);
+    if (web && !/linkedin|@/.test(web[0])) p.basics.website = web[0].replace(/^https?:\/\/(www\.)?/, "");
+    const nameLine = L.find((l) => /^[\p{Lu}][\p{L}'’.-]+(\s+[\p{Lu}][\p{L}'’.-]+){1,3}$/u.test(l) && !HEAD.summary.test(l));
+    if (nameLine) p.basics.name = nameLine;
+    const ni = L.indexOf(nameLine);
+    if (ni >= 0 && L[ni + 1] && L[ni + 1].length < 70 && !/@|\d{4}/.test(L[ni + 1])) p.basics.headline = L[ni + 1];
+    const loc = raw.match(/\b([A-ZÄÖÅ][a-zäöåüé]+),\s*(Finland|Sweden|Norway|Denmark|Germany|Austria|Switzerland|Netherlands|Belgium|France|Ireland|United Kingdom|UK|Spain|Italy|Portugal|Poland|Estonia|Suomi)\b/);
+    if (loc) p.basics.location = loc[0];
+
+    // split into sections
+    let cur = null; const sec = {};
+    L.forEach((l) => {
+      const key = l.length < 40 ? Object.keys(HEAD).find((k) => HEAD[k].test(l.replace(/[:•]/g, "").trim())) : null;
+      if (key) { cur = key; sec[key] = sec[key] || []; return; }
+      if (cur) sec[cur].push(l);
+    });
+    if (sec.summary) p.summary = sec.summary.join(" ").slice(0, 900);
+    if (sec.skills) p.skills = sec.skills.map((l) => l.replace(/^[-•*·▪]\s*/, "")).join("\n");
+    if (sec.languages) p.languages = sec.languages.map((l) => l.replace(/^[-•*·▪]\s*/, "")).join("\n");
+    if (sec.certifications) p.certifications = sec.certifications.map((l) => l.replace(/^[-•*·▪]\s*/, "")).join("\n");
+    if (sec.interests) p.interests = sec.interests.join(", ");
+    const entries = (lines, kind) => {
+      const out = []; let e = null;
+      lines.forEach((l, i) => {
+        const m = l.match(DATE_RANGE);
+        const isBullet = /^[-•*·▪●]/.test(l);
+        if (m && !isBullet) {
+          const parts = m[0].split(/\s*[-–—]\s*|\s+to\s+/i);
+          const head = l.replace(m[0], "").replace(/[|,–—-]\s*$/, "").trim();
+          const prev = lines[i - 1] && !lines[i - 1].match(DATE_RANGE) && !/^[-•*·▪●]/.test(lines[i - 1]) && (!e || e._lines > 0) ? lines[i - 1] : "";
+          const [a, b] = (head || prev).split(/\s*,\s+|\s+(?:at|@|\||–|—)\s+/);
+          e = kind === "exp" ? { title: a || "", company: b || "", location: "", start: parts[0] || "", end: parts[1] || "", bullets: "", _lines: 0 } : { degree: a || "", school: b || "", location: "", start: parts[0] || "", end: parts[1] || "", details: "", _lines: 0 };
+          if (prev && e && out.length && out[out.length - 1].bullets) out[out.length - 1].bullets = out[out.length - 1].bullets.replace(new RegExp("\\n?" + prev.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"), "");
+          out.push(e);
+        } else if (e) {
+          const t = l.replace(/^[-•*·▪●]\s*/, "");
+          if (kind === "exp") e.bullets += (e.bullets ? "\n" : "") + t; else e.details += (e.details ? "; " : "") + t;
+          e._lines++;
+        }
+      });
+      out.forEach((x) => delete x._lines);
+      return out;
+    };
+    if (sec.experience) p.experience = entries(sec.experience, "exp");
+    if (sec.education) p.education = entries(sec.education, "edu");
+    if (sec.projects) p.projects = [{ name: (sec.projects[0] || "").replace(/^[-•*·▪]\s*/, ""), link: "", bullets: sec.projects.slice(1).map((l) => l.replace(/^[-•*·▪]\s*/, "")).join("\n") }];
+    if (!p.experience.length) p.experience = [{ title: "", company: "", location: "", start: "", end: "", bullets: "" }];
+    if (!p.education.length) p.education = [{ degree: "", school: "", location: "", start: "", end: "", details: "" }];
+    const found = ["name", "email", "phone"].filter((k) => p.basics[k]).length + Object.keys(sec).length;
+    return { profile: p, found, sections: Object.keys(sec) };
+  };
+
+  CH.matchScore = function (profile, job, settings) {
+    if (!job || (job.text || "").length < 50) return null;
+    return CH.analyze(CH.toResume(profile), job, settings || {}).fit;
+  };
 })();

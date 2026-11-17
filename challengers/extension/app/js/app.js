@@ -11,13 +11,15 @@
     job: clone(CH.SAMPLE_JOB),
     profile: clone(CH.SAMPLE_PROFILE),
     settings: { country: "FI", lang: "en", template: "modern", accent: "#1f3a5f", order: "auto", showPhoto: false, photo: "", showDob: false, showNationality: false, gdpr: false, coverLetter: true },
-    instructions: "", output: "json", cover: "", tracker: [], isExample: true, tab: "job",
+    instructions: "", output: "json", cover: "", tracker: [], pipeline: [], stories: [], toolOut: "", tool: "import", isExample: true, tab: "job",
   });
   let state = defaults();
   let undoStack = null;
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || "null");
     if (saved && saved.profile) state = { ...defaults(), ...saved, settings: { ...defaults().settings, ...saved.settings } };
+    // migrate the old simple tracker into the pipeline
+    if (state.tracker && state.tracker.length) { state.pipeline = [...state.tracker.map((t) => ({ id: "j" + Math.random().toString(36).slice(2, 9), title: t.role, company: t.company, status: t.status, date: t.date, text: "", url: "" })), ...(state.pipeline || [])]; state.tracker = []; }
   } catch (e) { /* storage unavailable: start with defaults */ }
 
   let saveTimer;
@@ -26,10 +28,13 @@
   /* ---------- platform: claude.ai viewer vs normal browser ---------- */
   const P = { downloads: null, sample: null, inClaude: !!(window.claude && window.claude.use) };
   async function initPlatform() {
-    if (!P.inClaude) { $("#bookmarkletBox").hidden = false; buildBookmarklet(); return; }
+    if (!P.inClaude) { $("#bookmarkletBox").hidden = false; $("#extZip").hidden = location.protocol === "file:"; buildBookmarklet(); renderToolHint(); return; }
     try { P.downloads = await window.claude.use("downloads"); } catch (e) { P.downloads = null; }
     try { P.sample = await window.claude.use("sample"); } catch (e) { P.sample = null; }
     $("#claudeHere").hidden = !P.sample;
+    $("#toolRun").hidden = !P.sample;
+    $("#mockStart").hidden = !P.sample;
+    renderToolHint();
   }
   async function saveFile(name, data, mime) {
     if (P.downloads) {
@@ -68,6 +73,8 @@
     $$(".panel").forEach((p) => (p.hidden = p.dataset.panel !== name));
     if (name === "ai") $("#promptBox").value = currentPrompt();
     if (name === "apply") renderKit();
+    if (name === "interview") renderInterview();
+    if (name === "jobs") renderJobs();
     save();
   }
   $$(".tab").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
@@ -140,9 +147,9 @@
   }));
 
   $("#startBlank").addEventListener("click", () => {
-    const keepTracker = state.tracker;
+    const keep = { pipeline: state.pipeline, stories: state.stories };
     state = defaults();
-    state.tracker = keepTracker;
+    Object.assign(state, keep);
     state.isExample = false;
     state.job = { title: "", company: "", text: "" };
     state.profile = { basics: { name: "", headline: "", email: "", phone: "", location: "", linkedin: "", website: "", workAuth: "", nationality: "", dob: "" }, summary: "", experience: [clone(blank.experience)], education: [clone(blank.education)], skills: "", languages: "", certifications: "", projects: [], interests: "", rawResume: "" };
@@ -366,38 +373,8 @@
       btn.addEventListener("click", () => copy(String(value), label));
       kit.appendChild(btn);
     });
-    renderTracker();
-  }
-  const STATUSES = ["Saved", "Applied", "Interview", "Offer", "Rejected"];
-  function renderTracker() {
-    const list = $("#trackList");
-    if (!state.tracker.length) { list.innerHTML = '<p class="empty">No applications yet. Add the jobs you apply to and keep track of where each one stands.</p>'; return; }
-    list.innerHTML = "";
-    state.tracker.forEach((t, i) => {
-      const row = document.createElement("div");
-      row.className = "track-row";
-      row.innerHTML = `<div><strong>${CH.escapeHTML(t.company)}</strong> · ${CH.escapeHTML(t.role)} <span class="date">${CH.escapeHTML(t.date)}</span></div>`;
-      const sel = document.createElement("select");
-      sel.id = "track-status-" + i; sel.setAttribute("aria-label", "Status for " + t.company);
-      STATUSES.forEach((s) => sel.add(new Option(s, s, false, s === t.status)));
-      sel.addEventListener("change", () => { t.status = sel.value; save(); });
-      const del = document.createElement("button");
-      del.type = "button"; del.className = "btn tiny danger"; del.textContent = "Remove";
-      del.addEventListener("click", () => { state.tracker.splice(i, 1); save(); renderTracker(); });
-      row.append(sel, del); list.appendChild(row);
-    });
   }
   const today = () => new Date().toISOString().slice(0, 10);
-  $("#trackForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    state.tracker.unshift({ company: $("#tCompany").value.trim(), role: $("#tRole").value.trim(), status: $("#tStatus").value, date: today() });
-    $("#tCompany").value = ""; $("#tRole").value = ""; save(); renderTracker();
-  });
-  $("#trackCurrent").addEventListener("click", () => {
-    if (!state.job.company && !state.job.title) { toast("Add a job title or company in step 1 first"); return; }
-    state.tracker.unshift({ company: (state.job.company || "—").replace(/\s*\(example\)/i, ""), role: state.job.title || "—", status: "Applied", date: today() });
-    save(); renderTracker(); toast("Added to your applications");
-  });
 
   /* ---------- bookmarklet + incoming jobs (normal web hosting only) ---------- */
   function buildBookmarklet() {
@@ -421,7 +398,205 @@
     }
   }
 
+  /* ---------- CV import (file / pasted text) ---------- */
+  function applyImported(profile, note) {
+    undoStack = clone(state.profile);
+    state.profile = profile; state.isExample = false;
+    fillForm(); render(); save();
+    $("#undoBtn").disabled = false;
+    $("#importNote").innerHTML = note;
+  }
+  $("#cvFile").addEventListener("change", async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    e.target.value = "";
+    $("#importNote").textContent = "Reading " + f.name + "…";
+    try {
+      const text = await CH.readCVFile(f);
+      if (text.trim().length < 40) throw new Error("No text found. Is it a scanned image? Paste the text instead.");
+      state.profile.rawResume = text; $("#rawResume").value = text; save();
+      parseNow();
+    } catch (err) { $("#importNote").textContent = err.message || "Could not read that file."; }
+  });
+  function parseNow() {
+    const text = state.profile.rawResume || "";
+    if (text.trim().length < 40) { toast("Paste your CV or LinkedIn text first"); return; }
+    const { profile, sections } = CH.importText(text);
+    applyImported(profile, `<strong>Form filled.</strong> Found: contact details${sections.length ? ", " + sections.map(CH.escapeHTML).join(", ") : ""}. Check each section${P.sample ? ", or click <em>Clean up with AI</em> for a perfect split" : ""}. <em>Undo</em> in step 3 restores your previous version.`);
+    toast("Form filled from your CV");
+  }
+  $("#parseText").addEventListener("click", parseNow);
+  $("#aiParse").addEventListener("click", () => { $("#toolSel").value = "import"; state.tool = "import"; renderToolHint(); showTab("ai"); $("#toolSel").scrollIntoView({ behavior: "smooth", block: "center" }); });
+
+  /* ---------- AI toolkit ---------- */
+  CH.TOOLS.forEach((t) => $("#toolSel").add(new Option(t.label, t.id)));
+  $("#toolSel").value = state.tool || "import";
+  $("#toolOut").value = state.toolOut || "";
+  const curTool = () => CH.TOOLS.find((t) => t.id === $("#toolSel").value) || CH.TOOLS[0];
+  function renderToolHint() {
+    const t = curTool();
+    $("#toolDesc").textContent = t.desc;
+    $("#toolHint").textContent = t.out === "json"
+      ? (P.sample ? "Run with Claude loads the result straight into your CV. With another AI: copy the prompt, then paste its answer in “Paste the AI's answer” above and click Load." : "Copy the prompt into any AI chat, then paste its answer in “Paste the AI's answer” above and click Load.")
+      : t.out === "cover" ? "The letter goes into the Cover letter box below." : "Copy the prompt into any AI chat and paste the answer here to keep it.";
+  }
+  $("#toolSel").addEventListener("change", () => { state.tool = $("#toolSel").value; renderToolHint(); save(); });
+  $("#toolOut").addEventListener("input", () => { state.toolOut = $("#toolOut").value; save(); });
+  const toolState = () => ({ profile: state.profile, job: state.job, settings: state.settings });
+  $("#toolCopy").addEventListener("click", () => {
+    const t = curTool();
+    if (t.id === "import" && !(state.profile.rawResume || "").trim()) { toast("Paste your CV or LinkedIn text in step 2 first"); showTab("you"); return; }
+    copy(t.build(toolState()), t.label + " prompt");
+  });
+  let toolCtl = null;
+  $("#toolRun").addEventListener("click", async () => {
+    if (!P.sample) return;
+    const t = curTool();
+    if (t.id === "import" && !(state.profile.rawResume || "").trim()) { toast("Paste your CV or LinkedIn text in step 2 first"); showTab("you"); return; }
+    const btn = $("#toolRun"); btn.disabled = true; btn.textContent = "Claude is working…";
+    const out = $("#toolOut"); out.value = "Thinking… (up to a minute)";
+    toolCtl = new AbortController();
+    try {
+      const { text } = await P.sample(t.build(toolState()), { modelTier: t.out === "json" ? "complex" : "default", signal: toolCtl.signal, onText: ({ text }) => { out.value = text; } });
+      if (t.out === "json") { importResult(text); if (t.id === "translate") toast("CV translated"); else toast("Imported into your CV"); out.value = "Done. Check the result in the preview and in step 2."; }
+      else if (t.out === "cover") { state.cover = text.trim(); $("#coverText").value = state.cover; out.value = "Cover letter written. See the Cover letter box below."; toast("Cover letter ready"); }
+      else { state.toolOut = text; toast("Done"); }
+      save();
+    } catch (e) { out.value = (e && SAMPLE_ERR[e.code]) || "Couldn't finish. Try again, or copy the prompt into another AI."; }
+    finally { btn.disabled = false; btn.textContent = "Run with Claude"; }
+  });
+  $("#toolOutCopy").addEventListener("click", () => copy($("#toolOut").value, "Result"));
+  $("#toolOutDl").addEventListener("click", () => saveFile("ChaLLengErs_" + curTool().id + ".txt", $("#toolOut").value || " ", "text/plain"));
+
+  /* ---------- interview coach ---------- */
+  function renderInterview() {
+    const qs = CH.interviewQuestions(currentResume(), state.job, state.settings);
+    $("#iqList").innerHTML = qs.map((q) => `<div class="iq-item"><span class="chip">${CH.escapeHTML(q.cat)}</span><span class="iq-q">${CH.escapeHTML(q.q)}</span><span class="iq-tip">${CH.escapeHTML(q.tip)}</span></div>`).join("");
+    renderStories();
+  }
+  function renderStories() {
+    const list = $("#starList"); list.innerHTML = "";
+    $("#starCount").textContent = state.stories.length ? `${state.stories.length} saved ${state.stories.length === 1 ? "story" : "stories"}` : "";
+    state.stories.forEach((st, i) => {
+      const d = document.createElement("div"); d.className = "story";
+      const t = document.createElement("div"); t.textContent = st;
+      const tools = document.createElement("div"); tools.className = "btnrow";
+      const c = document.createElement("button"); c.type = "button"; c.className = "btn tiny ghost"; c.textContent = "Copy"; c.onclick = () => copy(st, "Story");
+      const r = document.createElement("button"); r.type = "button"; r.className = "btn tiny danger"; r.textContent = "Remove"; r.onclick = () => { state.stories.splice(i, 1); save(); renderStories(); };
+      tools.append(c, r); d.append(t, tools); list.appendChild(d);
+    });
+  }
+  $("#starSave").addEventListener("click", () => {
+    const [S, T, A, R] = ["#starS", "#starT", "#starA", "#starR"].map((id) => $(id).value.trim());
+    if (!S && !A) { toast("Fill in at least Situation and Action"); return; }
+    const story = `Situation: ${S}\nTask: ${T}\nAction: ${A}\nResult: ${R}`;
+    state.stories.unshift(story);
+    ["#starS", "#starT", "#starA", "#starR"].forEach((id) => ($(id).value = ""));
+    if (!/\d/.test(R)) toast("Saved. Tip: add a number to the Result"); else toast("Story saved");
+    save(); renderStories();
+  });
+  $("#mockCopy").addEventListener("click", () => copy(CH.mockInterviewIntro(toolState()), "Mock-interview prompt"));
+  let mockTurns = [];
+  function renderChat() {
+    const chat = $("#mockChat"); chat.hidden = !mockTurns.length; chat.innerHTML = "";
+    mockTurns.slice(1).forEach((t) => { const m = document.createElement("div"); m.className = "msg " + (t.role === "user" ? "me" : "ai"); m.textContent = t.content; chat.appendChild(m); });
+    chat.scrollTop = chat.scrollHeight;
+  }
+  async function mockAsk() {
+    const chat = $("#mockChat");
+    const live = document.createElement("div"); live.className = "msg ai"; live.textContent = "…"; chat.hidden = false; chat.appendChild(live);
+    $("#mockSend").disabled = true;
+    try {
+      const { text } = await P.sample(mockTurns, { cache: false, onText: ({ text }) => { live.textContent = text; chat.scrollTop = chat.scrollHeight; } });
+      mockTurns.push({ role: "assistant", content: text });
+    } catch (e) { live.textContent = (e && SAMPLE_ERR[e.code]) || "The interviewer couldn't answer. Try again."; mockTurns.pop(); }
+    finally { $("#mockSend").disabled = false; renderChat(); }
+  }
+  $("#mockStart").addEventListener("click", () => {
+    if (!P.sample) return;
+    if ((state.job.text || "").trim().length < 50) { toast("Paste the job ad first (step 1)"); showTab("job"); return; }
+    mockTurns = [{ role: "user", content: CH.mockInterviewIntro(toolState()) }];
+    $("#mockInput").hidden = false; $("#mockStart").textContent = "Restart interview";
+    renderChat(); mockAsk();
+  });
+  $("#mockSend").addEventListener("click", () => {
+    const v = $("#mockAnswer").value.trim();
+    if (!v || !P.sample || !mockTurns.length) return;
+    mockTurns.push({ role: "user", content: v }); $("#mockAnswer").value = "";
+    renderChat(); mockAsk();
+  });
+
+  /* ---------- jobs: search + pipeline ---------- */
+  const STATUSES = ["Saved", "Applied", "Interview", "Offer", "Rejected"];
+  function renderBoards() {
+    const role = $("#findRole").value.trim() || state.job.title || state.profile.basics.headline || "";
+    const loc = $("#findLoc").value.trim() || (state.profile.basics.location || "").split(",")[0];
+    const boards = [...(CH.JOB_BOARDS[state.settings.country] || []), ...CH.JOB_BOARDS.ALL];
+    const box = $("#boards"); box.innerHTML = "";
+    boards.forEach((b) => { const a = document.createElement("a"); a.className = "btn ghost"; a.target = "_blank"; a.rel = "noopener"; a.href = b.url(role, loc); a.textContent = b.name + " ↗"; box.appendChild(a); });
+  }
+  $("#findRole").addEventListener("input", renderBoards);
+  $("#findLoc").addEventListener("input", renderBoards);
+  function addJob(j) {
+    state.pipeline.unshift({ id: "j" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), title: j.title || CH.guessJobTitle(j.text || "") || "Untitled job", company: (j.company || "").replace(/\s*\(example\)/i, ""), status: j.status || "Saved", date: today(), text: j.text || "", url: j.url || "" });
+    save();
+  }
+  function renderJobs() {
+    if (!$("#findRole").value) $("#findRole").placeholder = state.job.title || state.profile.basics.headline || "e.g. Data Analyst";
+    if (!$("#findLoc").value) $("#findLoc").placeholder = (state.profile.basics.location || "").split(",")[0] || "e.g. Helsinki";
+    renderBoards();
+    const rows = state.pipeline.map((j) => ({ j, score: CH.matchScore(state.profile, j, state.settings) }));
+    rows.sort((a, b) => (STATUSES.indexOf(a.j.status) >= 3) - (STATUSES.indexOf(b.j.status) >= 3) || (b.score ?? -1) - (a.score ?? -1));
+    const counts = STATUSES.map((st) => [st, state.pipeline.filter((j) => j.status === st).length]);
+    const scored = rows.filter((r) => r.score != null);
+    $("#pipeStats").innerHTML = state.pipeline.length ? counts.map(([st, n]) => `<span class="stat">${st} ${n}</span>`).join("") + (scored.length ? `<span class="stat">Avg fit ${Math.round(scored.reduce((a, r) => a + r.score, 0) / scored.length)}</span>` : "") : "";
+    const list = $("#pipeList"); list.innerHTML = "";
+    if (!rows.length) { list.innerHTML = '<p class="empty">No jobs yet. Add job ads here (or with the extension) and ChaLLengErs ranks them by how well your CV matches, so you apply where you have the best chance.</p>'; return; }
+    rows.forEach(({ j, score }) => {
+      const row = document.createElement("div"); row.className = "pipe-row";
+      const sc = document.createElement("div"); sc.className = "pipe-score " + (score == null ? "na" : score >= 70 ? "hi" : score >= 45 ? "mid" : "lo"); sc.textContent = score == null ? "–" : score; sc.title = score == null ? "Add the ad text to get a match score" : "Job fit: % of this job's keywords your CV covers";
+      const main = document.createElement("div"); main.className = "pipe-main";
+      const strong = document.createElement("strong"); strong.textContent = j.title + (j.company ? " · " + j.company : "");
+      const date = document.createElement("span"); date.className = "date"; date.textContent = j.date + (j.url ? " · " : "");
+      main.append(strong, date);
+      if (j.url && /^https?:/i.test(j.url)) { const a = document.createElement("a"); a.href = j.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = "open ad ↗"; a.className = "date"; main.appendChild(a); }
+      const tools = document.createElement("div"); tools.className = "pipe-tools";
+      const sel = document.createElement("select"); sel.id = "pipe-st-" + j.id; sel.setAttribute("aria-label", "Status");
+      STATUSES.forEach((st) => sel.add(new Option(st, st, false, st === j.status)));
+      sel.addEventListener("change", () => { j.status = sel.value; save(); renderJobs(); });
+      const tailor = document.createElement("button"); tailor.type = "button"; tailor.className = "btn tiny primary"; tailor.textContent = "Tailor CV";
+      tailor.disabled = !(j.text || "").trim();
+      tailor.addEventListener("click", () => { state.job = { title: j.title, company: j.company, text: j.text }; fillForm(); render(); save(); showTab("ai"); toast("Loaded " + j.title + ". Now tailor"); });
+      const del = document.createElement("button"); del.type = "button"; del.className = "btn tiny danger"; del.textContent = "Remove";
+      del.addEventListener("click", () => { state.pipeline = state.pipeline.filter((x) => x !== j); save(); renderJobs(); });
+      tools.append(sel, tailor, del);
+      row.append(sc, main, tools); list.appendChild(row);
+    });
+  }
+  $("#pAdd").addEventListener("click", () => {
+    const text = $("#pText").value.trim(), title = $("#pTitle").value.trim();
+    if (!text && !title) { toast("Add a title or paste the ad"); return; }
+    addJob({ title, company: $("#pCompany").value.trim(), text });
+    ["#pTitle", "#pCompany", "#pText"].forEach((id) => ($(id).value = ""));
+    renderJobs(); toast("Added to your pipeline");
+  });
+  $("#pAddCurrent").addEventListener("click", () => {
+    if (!(state.job.text || "").trim() && !state.job.title) { toast("Add a job in step 1 first"); return; }
+    addJob({ ...state.job, status: "Saved" }); renderJobs(); toast("Added to your pipeline");
+  });
+  function mergeInbox() {
+    try {
+      const inbox = JSON.parse(localStorage.getItem("challengers.inbox") || "[]");
+      if (!inbox.length) return;
+      localStorage.removeItem("challengers.inbox");
+      inbox.forEach((j) => addJob(j));
+      toast(inbox.length + " job(s) added from the extension");
+      if (state.tab === "jobs") renderJobs();
+    } catch (e) { /* ignore */ }
+  }
+  window.addEventListener("storage", (e) => { if (e.key === "challengers.inbox" && e.newValue) mergeInbox(); });
+
   /* ---------- boot ---------- */
+  mergeInbox();
   takeIncoming();
   fillForm();
   showTab(state.tab || "job");

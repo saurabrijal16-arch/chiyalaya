@@ -16,7 +16,7 @@
   <header class="top">
     <div class="brand">
       <span class="logo" aria-label="ChaLLengErs">Cha<b>LL</b>eng<b>E</b>rs</span>
-      <span class="tag">Free CV builder for European jobs · tailored to each job ad · checked against ATS rules</span>
+      <span class="tag">Your free AI job-application toolkit for Europe: tailored CVs, ATS score, cover letters, translation, interview coach, job pipeline, autofill</span>
     </div>
     <nav class="toplinks">
       <span class="pill-free">100% free · no sign-up · your data stays in your browser</span>
@@ -36,7 +36,9 @@
         <button type="button" role="tab" class="tab" data-tab="you"><span class="step">2</span>You</button>
         <button type="button" role="tab" class="tab" data-tab="ai"><span class="step">3</span>Tailor &amp; AI</button>
         <button type="button" role="tab" class="tab" data-tab="design"><span class="step">4</span>Design</button>
-        <button type="button" role="tab" class="tab" data-tab="apply"><span class="step">5</span>Apply</button>
+        <button type="button" role="tab" class="tab" data-tab="interview"><span class="step">5</span>Interview</button>
+        <button type="button" role="tab" class="tab" data-tab="jobs"><span class="step">6</span>Jobs</button>
+        <button type="button" role="tab" class="tab" data-tab="apply"><span class="step">7</span>Apply</button>
       </div>
 
       <!-- JOB -->
@@ -62,6 +64,17 @@
 
       <!-- YOU -->
       <div class="panel" data-panel="you" hidden>
+        <div class="callout">
+          <h3>Start from your existing CV or LinkedIn <span class="chip free">PDF · DOCX · TXT</span></h3>
+          <p>Upload your CV, or paste your CV or LinkedIn profile text below. ChaLLengErs fills in the form for you. Check the result, then use AI to polish it.</p>
+          <div class="btnrow">
+            <label class="btn ghost filebtn">Upload CV file<input type="file" id="cvFile" accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"></label>
+            <button type="button" class="btn primary" id="parseText">Fill the form from this text</button>
+            <button type="button" class="btn ghost" id="aiParse">Clean up with AI</button>
+          </div>
+          <textarea id="rawResume" rows="5" placeholder="Paste your CV text, LinkedIn profile (Profile → More → Save to PDF, then upload), achievements or numbers. AI also uses this as a source of facts."></textarea>
+          <div id="importNote" class="notes"></div>
+        </div>
         <fieldset>
           <legend>Contact</legend>
           <div class="row2">
@@ -114,10 +127,6 @@
           <legend>Interests <span class="hint">optional, one line</span></legend>
           <input id="interests" placeholder="e.g. Trail running, volunteering at Helsinki Food Bank">
         </fieldset>
-        <fieldset>
-          <legend>Old CV or extra notes <span class="hint">Only sent to AI. Paste anything: old CV, achievements, numbers.</span></legend>
-          <textarea id="rawResume" rows="5" placeholder="Paste your current CV text or LinkedIn 'About' here. The AI uses it as a source of facts."></textarea>
-        </fieldset>
         <div class="btnrow">
           <button type="button" class="btn ghost" id="saveProfile">Save profile file (.json)</button>
           <label class="btn ghost filebtn">Load profile file<input type="file" id="loadProfile" accept=".json,application/json"></label>
@@ -167,6 +176,21 @@
         </div>
 
         <div class="callout">
+          <h3>AI toolkit <span class="chip free">8 tools · free</span></h3>
+          <div class="row2">
+            <label>Tool<select id="toolSel"></select></label>
+            <div class="tooldesc" id="toolDesc"></div>
+          </div>
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="toolRun" hidden>Run with Claude</button>
+            <button type="button" class="btn ghost" id="toolCopy">Copy prompt for any AI</button>
+          </div>
+          <p class="hint" id="toolHint"></p>
+          <textarea id="toolOut" rows="8" placeholder="The result appears here. You can also paste an AI's answer here to keep it."></textarea>
+          <div class="btnrow"><button type="button" class="btn ghost small" id="toolOutCopy">Copy result</button><button type="button" class="btn ghost small" id="toolOutDl">Download .txt</button></div>
+        </div>
+
+        <div class="callout">
           <h3>Cover letter</h3>
           <div class="btnrow"><button type="button" class="btn ghost" id="draftCover">Draft from my CV (free)</button><button type="button" class="btn ghost" id="copyCover">Copy</button><button type="button" class="btn ghost" id="dlCover">Download .txt</button></div>
           <textarea id="coverText" rows="10" placeholder="Your cover letter appears here. Edit freely."></textarea>
@@ -191,6 +215,62 @@
         <div class="notes">All templates are single-column, use standard headings and a standard font, and export real text (not images), which is what ATS parsers need.</div>
       </div>
 
+      <!-- INTERVIEW -->
+      <div class="panel" data-panel="interview" hidden>
+        <div class="callout" id="mockBox">
+          <h3>Mock interview <span class="chip free">AI interviewer · scored feedback</span></h3>
+          <p id="mockIntro">An AI interviewer asks questions for this exact job, scores each answer out of 5, shows a stronger version from your real CV and gives a final verdict.</p>
+          <div id="mockChat" class="chat" hidden></div>
+          <div id="mockInput" class="row-send" hidden><textarea id="mockAnswer" rows="3" placeholder="Type your answer… (or use your keyboard's dictation)"></textarea><button type="button" class="btn primary" id="mockSend">Send</button></div>
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="mockStart" hidden>Start mock interview with Claude</button>
+            <button type="button" class="btn ghost" id="mockCopy">Copy mock-interview prompt</button>
+            <a class="btn ghost" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT (voice mode) ↗</a>
+            <a class="btn ghost" href="https://claude.ai/new" target="_blank" rel="noopener">Claude ↗</a>
+          </div>
+        </div>
+        <div class="callout">
+          <h3>Likely questions for this job <span class="chip free">free · from your CV + the ad</span></h3>
+          <div id="iqList" class="iq"></div>
+        </div>
+        <div class="callout">
+          <h3>STAR story builder</h3>
+          <p>Prepare 4–6 stories you can reuse for many questions. Results with numbers win.</p>
+          <div class="row2">
+            <label>Situation<textarea id="starS" rows="2" placeholder="Context: where, when, what was the problem?"></textarea></label>
+            <label>Task<textarea id="starT" rows="2" placeholder="Your responsibility or goal"></textarea></label>
+            <label>Action<textarea id="starA" rows="3" placeholder="What YOU did, step by step (use “I”)"></textarea></label>
+            <label>Result<textarea id="starR" rows="3" placeholder="Outcome with numbers, plus what you learned"></textarea></label>
+          </div>
+          <div class="btnrow"><button type="button" class="btn primary" id="starSave">Save story</button><span class="hint" id="starCount"></span></div>
+          <div id="starList" class="stories"></div>
+        </div>
+      </div>
+
+      <!-- JOBS -->
+      <div class="panel" data-panel="jobs" hidden>
+        <div class="callout">
+          <h3>Find jobs</h3>
+          <div class="row2">
+            <label>Role<input id="findRole" placeholder="e.g. Data Analyst"></label>
+            <label>Location<input id="findLoc" placeholder="e.g. Helsinki"></label>
+          </div>
+          <div id="boards" class="kit"></div>
+          <p class="hint">Opens each job site's own search. Found a good one? Paste it below or use the extension to save it.</p>
+        </div>
+        <div class="callout">
+          <h3>Job pipeline <span class="chip free">match score for every job</span></h3>
+          <div id="pipeStats" class="stats"></div>
+          <div class="btnrow"><button type="button" class="btn ghost small" id="pAddCurrent">+ Add the job from step 1</button></div>
+          <details id="pipeAddBox"><summary>+ Add a job ad</summary>
+            <div class="row2"><label>Job title<input id="pTitle"></label><label>Company<input id="pCompany"></label></div>
+            <label>Job ad text<textarea id="pText" rows="5" placeholder="Paste the ad to get a match score"></textarea></label>
+            <div class="btnrow"><button type="button" class="btn primary" id="pAdd">Add to pipeline</button></div>
+          </details>
+          <div id="pipeList" class="pipe"></div>
+        </div>
+      </div>
+
       <!-- APPLY -->
       <div class="panel" data-panel="apply" hidden>
         <div class="callout">
@@ -199,15 +279,9 @@
           <div id="kit" class="kit"></div>
         </div>
         <div class="callout">
-          <h3>My applications</h3>
-          <form id="trackForm" class="row4">
-            <input id="tCompany" placeholder="Company" required>
-            <input id="tRole" placeholder="Role" required>
-            <select id="tStatus"><option>Saved</option><option>Applied</option><option>Interview</option><option>Offer</option><option>Rejected</option></select>
-            <button class="btn primary" type="submit">Add</button>
-          </form>
-          <button type="button" class="btn small ghost" id="trackCurrent">+ Add current job</button>
-          <div id="trackList" class="track"></div>
+          <h3>1-click autofill <span class="chip free">browser extension</span></h3>
+          <p>On an employer's application form (Workday, Greenhouse, Lever, Teamtailor, SmartRecruiters, Personio and more), click the ChaLLengErs extension → <strong>Autofill this application</strong>. It fills your name, contact details and links, pastes your cover letter and attaches your tailored CV as a PDF. You check everything and click Submit yourself, so applications stay accurate and your accounts stay safe.</p>
+          <div class="btnrow" id="extLinks"><a class="btn ghost" id="extZip" href="challengers-extension.zip" hidden>Download the extension (.zip)</a><a class="btn ghost" href="https://github.com/saurabrijal16-arch/chiyalaya/tree/main/challengers/extension" target="_blank" rel="noopener">Extension source &amp; install guide ↗</a></div>
         </div>
         <div class="callout" id="bookmarkletBox" hidden>
           <h3>Grab job ads from any site</h3>
@@ -286,6 +360,7 @@
 <script src="js/engine.js"></script>
 <script src="js/prompt.js"></script>
 <script src="js/exporters.js"></script>
+<script src="js/importers.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

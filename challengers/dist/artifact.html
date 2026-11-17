@@ -196,12 +196,39 @@ details summary { cursor: pointer; font-weight: 600; }
 
 @media (prefers-reduced-motion: reduce) { .ring-fg { transition: none; } }
 
+/* toolkit, interview, pipeline */
+.tooldesc { font-size: 13px; color: var(--muted); align-self: end; }
+.chat { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow: auto; padding: 4px; }
+.msg { padding: 10px 12px; border-radius: 12px; white-space: pre-wrap; font-size: 13.5px; max-width: 92%; min-width: 0; overflow-wrap: anywhere; }
+.msg.ai { background: var(--surface-2); border: 1px solid var(--line); align-self: flex-start; }
+.msg.me { background: var(--accent-soft); align-self: flex-end; }
+.row-send { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+.iq { display: flex; flex-direction: column; gap: 8px; }
+.iq-item { border-bottom: 1px solid var(--line); padding-bottom: 8px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; }
+.iq-item .chip { align-self: start; }
+.iq-q { font-weight: 600; }
+.iq-tip { grid-column: 2; color: var(--muted); font-size: 13px; }
+.stories { display: flex; flex-direction: column; gap: 8px; }
+.story { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; font-size: 13px; white-space: pre-wrap; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px; }
+.stat { font: 500 12px var(--f-mono); padding: 5px 10px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.pipe { display: flex; flex-direction: column; }
+.pipe-row { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 6px 10px; align-items: center; border-bottom: 1px solid var(--line); padding: 8px 0; }
+.pipe-score { font: 800 18px var(--f-display); text-align: center; font-variant-numeric: tabular-nums; border-radius: 8px; padding: 6px 0; }
+.pipe-score.hi { background: var(--good-soft); color: var(--good); } .pipe-score.mid { background: var(--warn-soft); color: var(--warn); } .pipe-score.lo { background: var(--bad-soft); color: var(--bad); } .pipe-score.na { background: var(--surface-2); color: var(--muted); }
+.pipe-main { min-width: 0; }
+.pipe-main strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pipe-main .date { font: 500 11px var(--f-mono); color: var(--muted); }
+.pipe-tools { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.pipe-tools select { width: auto; padding: 4px 6px; font-size: 13px; }
+@media (max-width: 560px) { .pipe-row { grid-template-columns: 44px minmax(0, 1fr); } .pipe-tools { grid-column: 1 / -1; justify-content: flex-start; } }
+
 </style>
 <div class="shell">
   <header class="top">
     <div class="brand">
       <span class="logo" aria-label="ChaLLengErs">Cha<b>LL</b>eng<b>E</b>rs</span>
-      <span class="tag">Free CV builder for European jobs · tailored to each job ad · checked against ATS rules</span>
+      <span class="tag">Your free AI job-application toolkit for Europe: tailored CVs, ATS score, cover letters, translation, interview coach, job pipeline, autofill</span>
     </div>
     <nav class="toplinks">
       <span class="pill-free">100% free · no sign-up · your data stays in your browser</span>
@@ -221,7 +248,9 @@ details summary { cursor: pointer; font-weight: 600; }
         <button type="button" role="tab" class="tab" data-tab="you"><span class="step">2</span>You</button>
         <button type="button" role="tab" class="tab" data-tab="ai"><span class="step">3</span>Tailor &amp; AI</button>
         <button type="button" role="tab" class="tab" data-tab="design"><span class="step">4</span>Design</button>
-        <button type="button" role="tab" class="tab" data-tab="apply"><span class="step">5</span>Apply</button>
+        <button type="button" role="tab" class="tab" data-tab="interview"><span class="step">5</span>Interview</button>
+        <button type="button" role="tab" class="tab" data-tab="jobs"><span class="step">6</span>Jobs</button>
+        <button type="button" role="tab" class="tab" data-tab="apply"><span class="step">7</span>Apply</button>
       </div>
 
       <!-- JOB -->
@@ -247,6 +276,17 @@ details summary { cursor: pointer; font-weight: 600; }
 
       <!-- YOU -->
       <div class="panel" data-panel="you" hidden>
+        <div class="callout">
+          <h3>Start from your existing CV or LinkedIn <span class="chip free">PDF · DOCX · TXT</span></h3>
+          <p>Upload your CV, or paste your CV or LinkedIn profile text below. ChaLLengErs fills in the form for you. Check the result, then use AI to polish it.</p>
+          <div class="btnrow">
+            <label class="btn ghost filebtn">Upload CV file<input type="file" id="cvFile" accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"></label>
+            <button type="button" class="btn primary" id="parseText">Fill the form from this text</button>
+            <button type="button" class="btn ghost" id="aiParse">Clean up with AI</button>
+          </div>
+          <textarea id="rawResume" rows="5" placeholder="Paste your CV text, LinkedIn profile (Profile → More → Save to PDF, then upload), achievements or numbers. AI also uses this as a source of facts."></textarea>
+          <div id="importNote" class="notes"></div>
+        </div>
         <fieldset>
           <legend>Contact</legend>
           <div class="row2">
@@ -299,10 +339,6 @@ details summary { cursor: pointer; font-weight: 600; }
           <legend>Interests <span class="hint">optional, one line</span></legend>
           <input id="interests" placeholder="e.g. Trail running, volunteering at Helsinki Food Bank">
         </fieldset>
-        <fieldset>
-          <legend>Old CV or extra notes <span class="hint">Only sent to AI. Paste anything: old CV, achievements, numbers.</span></legend>
-          <textarea id="rawResume" rows="5" placeholder="Paste your current CV text or LinkedIn 'About' here. The AI uses it as a source of facts."></textarea>
-        </fieldset>
         <div class="btnrow">
           <button type="button" class="btn ghost" id="saveProfile">Save profile file (.json)</button>
           <label class="btn ghost filebtn">Load profile file<input type="file" id="loadProfile" accept=".json,application/json"></label>
@@ -352,6 +388,21 @@ details summary { cursor: pointer; font-weight: 600; }
         </div>
 
         <div class="callout">
+          <h3>AI toolkit <span class="chip free">8 tools · free</span></h3>
+          <div class="row2">
+            <label>Tool<select id="toolSel"></select></label>
+            <div class="tooldesc" id="toolDesc"></div>
+          </div>
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="toolRun" hidden>Run with Claude</button>
+            <button type="button" class="btn ghost" id="toolCopy">Copy prompt for any AI</button>
+          </div>
+          <p class="hint" id="toolHint"></p>
+          <textarea id="toolOut" rows="8" placeholder="The result appears here. You can also paste an AI's answer here to keep it."></textarea>
+          <div class="btnrow"><button type="button" class="btn ghost small" id="toolOutCopy">Copy result</button><button type="button" class="btn ghost small" id="toolOutDl">Download .txt</button></div>
+        </div>
+
+        <div class="callout">
           <h3>Cover letter</h3>
           <div class="btnrow"><button type="button" class="btn ghost" id="draftCover">Draft from my CV (free)</button><button type="button" class="btn ghost" id="copyCover">Copy</button><button type="button" class="btn ghost" id="dlCover">Download .txt</button></div>
           <textarea id="coverText" rows="10" placeholder="Your cover letter appears here. Edit freely."></textarea>
@@ -376,6 +427,62 @@ details summary { cursor: pointer; font-weight: 600; }
         <div class="notes">All templates are single-column, use standard headings and a standard font, and export real text (not images), which is what ATS parsers need.</div>
       </div>
 
+      <!-- INTERVIEW -->
+      <div class="panel" data-panel="interview" hidden>
+        <div class="callout" id="mockBox">
+          <h3>Mock interview <span class="chip free">AI interviewer · scored feedback</span></h3>
+          <p id="mockIntro">An AI interviewer asks questions for this exact job, scores each answer out of 5, shows a stronger version from your real CV and gives a final verdict.</p>
+          <div id="mockChat" class="chat" hidden></div>
+          <div id="mockInput" class="row-send" hidden><textarea id="mockAnswer" rows="3" placeholder="Type your answer… (or use your keyboard's dictation)"></textarea><button type="button" class="btn primary" id="mockSend">Send</button></div>
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="mockStart" hidden>Start mock interview with Claude</button>
+            <button type="button" class="btn ghost" id="mockCopy">Copy mock-interview prompt</button>
+            <a class="btn ghost" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT (voice mode) ↗</a>
+            <a class="btn ghost" href="https://claude.ai/new" target="_blank" rel="noopener">Claude ↗</a>
+          </div>
+        </div>
+        <div class="callout">
+          <h3>Likely questions for this job <span class="chip free">free · from your CV + the ad</span></h3>
+          <div id="iqList" class="iq"></div>
+        </div>
+        <div class="callout">
+          <h3>STAR story builder</h3>
+          <p>Prepare 4–6 stories you can reuse for many questions. Results with numbers win.</p>
+          <div class="row2">
+            <label>Situation<textarea id="starS" rows="2" placeholder="Context: where, when, what was the problem?"></textarea></label>
+            <label>Task<textarea id="starT" rows="2" placeholder="Your responsibility or goal"></textarea></label>
+            <label>Action<textarea id="starA" rows="3" placeholder="What YOU did, step by step (use “I”)"></textarea></label>
+            <label>Result<textarea id="starR" rows="3" placeholder="Outcome with numbers, plus what you learned"></textarea></label>
+          </div>
+          <div class="btnrow"><button type="button" class="btn primary" id="starSave">Save story</button><span class="hint" id="starCount"></span></div>
+          <div id="starList" class="stories"></div>
+        </div>
+      </div>
+
+      <!-- JOBS -->
+      <div class="panel" data-panel="jobs" hidden>
+        <div class="callout">
+          <h3>Find jobs</h3>
+          <div class="row2">
+            <label>Role<input id="findRole" placeholder="e.g. Data Analyst"></label>
+            <label>Location<input id="findLoc" placeholder="e.g. Helsinki"></label>
+          </div>
+          <div id="boards" class="kit"></div>
+          <p class="hint">Opens each job site's own search. Found a good one? Paste it below or use the extension to save it.</p>
+        </div>
+        <div class="callout">
+          <h3>Job pipeline <span class="chip free">match score for every job</span></h3>
+          <div id="pipeStats" class="stats"></div>
+          <div class="btnrow"><button type="button" class="btn ghost small" id="pAddCurrent">+ Add the job from step 1</button></div>
+          <details id="pipeAddBox"><summary>+ Add a job ad</summary>
+            <div class="row2"><label>Job title<input id="pTitle"></label><label>Company<input id="pCompany"></label></div>
+            <label>Job ad text<textarea id="pText" rows="5" placeholder="Paste the ad to get a match score"></textarea></label>
+            <div class="btnrow"><button type="button" class="btn primary" id="pAdd">Add to pipeline</button></div>
+          </details>
+          <div id="pipeList" class="pipe"></div>
+        </div>
+      </div>
+
       <!-- APPLY -->
       <div class="panel" data-panel="apply" hidden>
         <div class="callout">
@@ -384,15 +491,9 @@ details summary { cursor: pointer; font-weight: 600; }
           <div id="kit" class="kit"></div>
         </div>
         <div class="callout">
-          <h3>My applications</h3>
-          <form id="trackForm" class="row4">
-            <input id="tCompany" placeholder="Company" required>
-            <input id="tRole" placeholder="Role" required>
-            <select id="tStatus"><option>Saved</option><option>Applied</option><option>Interview</option><option>Offer</option><option>Rejected</option></select>
-            <button class="btn primary" type="submit">Add</button>
-          </form>
-          <button type="button" class="btn small ghost" id="trackCurrent">+ Add current job</button>
-          <div id="trackList" class="track"></div>
+          <h3>1-click autofill <span class="chip free">browser extension</span></h3>
+          <p>On an employer's application form (Workday, Greenhouse, Lever, Teamtailor, SmartRecruiters, Personio and more), click the ChaLLengErs extension → <strong>Autofill this application</strong>. It fills your name, contact details and links, pastes your cover letter and attaches your tailored CV as a PDF. You check everything and click Submit yourself, so applications stay accurate and your accounts stay safe.</p>
+          <div class="btnrow" id="extLinks"><a class="btn ghost" id="extZip" href="challengers-extension.zip" hidden>Download the extension (.zip)</a><a class="btn ghost" href="https://github.com/saurabrijal16-arch/chiyalaya/tree/main/challengers/extension" target="_blank" rel="noopener">Extension source &amp; install guide ↗</a></div>
         </div>
         <div class="callout" id="bookmarkletBox" hidden>
           <h3>Grab job ads from any site</h3>
@@ -658,6 +759,57 @@ Nice to have: dbt, Excel (advanced), Google Analytics, basic statistics.`,
     interests: "",
     rawResume: "",
   };
+})();
+
+/* ---------- job boards (search links only: no scraping) ---------- */
+(function () {
+  const CH = window.CH;
+  const q = encodeURIComponent;
+  const dash = (s) => String(s || "").trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "");
+  const indeed = (cc) => (role, loc) => `https://${cc}.indeed.com/jobs?q=${q(role)}&l=${q(loc)}`;
+  CH.JOB_BOARDS = {
+    ALL: [
+      { name: "LinkedIn Jobs", url: (r, l) => `https://www.linkedin.com/jobs/search/?keywords=${q(r)}&location=${q(l)}` },
+      { name: "EURES (EU job portal)", url: () => "https://europa.eu/eures/portal/jv-se/home" },
+      { name: "Glassdoor", url: (r) => `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${q(r)}` },
+      { name: "Google Jobs", url: (r, l) => `https://www.google.com/search?q=${q(r + " jobs " + l)}&ibp=htl;jobs` },
+    ],
+    FI: [{ name: "Duunitori", url: (r, l) => `https://duunitori.fi/tyopaikat?haku=${q(r)}&alue=${q(l)}` }, { name: "Indeed Finland", url: indeed("fi") }, { name: "Työmarkkinatori", url: (r) => `https://tyomarkkinatori.fi/henkiloasiakkaat/avoimet-tyopaikat?q=${q(r)}` }],
+    SE: [{ name: "Platsbanken", url: (r) => `https://arbetsformedlingen.se/platsbanken/annonser?q=${q(r)}` }, { name: "Indeed Sweden", url: indeed("se") }],
+    NO: [{ name: "FINN jobb", url: (r) => `https://www.finn.no/job/fulltime/search.html?q=${q(r)}` }, { name: "Indeed Norway", url: indeed("no") }],
+    DK: [{ name: "Jobindex", url: (r) => `https://www.jobindex.dk/jobsoegning?q=${q(r)}` }, { name: "Indeed Denmark", url: indeed("dk") }],
+    DE: [{ name: "StepStone", url: (r, l) => `https://www.stepstone.de/jobs/${dash(r)}/in-${dash(l)}` }, { name: "Indeed Germany", url: indeed("de") }, { name: "Arbeitsagentur", url: (r) => `https://www.arbeitsagentur.de/jobsuche/suche?was=${q(r)}` }],
+    AT: [{ name: "karriere.at", url: (r) => `https://www.karriere.at/jobs?keywords=${q(r)}` }, { name: "Indeed Austria", url: indeed("at") }],
+    CH: [{ name: "jobs.ch", url: (r) => `https://www.jobs.ch/en/vacancies/?term=${q(r)}` }, { name: "Indeed Switzerland", url: indeed("ch") }],
+    NL: [{ name: "Indeed Netherlands", url: indeed("nl") }, { name: "Nationale Vacaturebank", url: (r) => `https://www.nationalevacaturebank.nl/vacature/zoeken?query=${q(r)}` }],
+    BE: [{ name: "Indeed Belgium", url: indeed("be") }],
+    FR: [{ name: "Welcome to the Jungle", url: (r) => `https://www.welcometothejungle.com/fr/jobs?query=${q(r)}` }, { name: "Indeed France", url: indeed("fr") }, { name: "France Travail", url: (r) => `https://candidat.francetravail.fr/offres/recherche?motsCles=${q(r)}` }],
+    IE: [{ name: "Indeed Ireland", url: indeed("ie") }, { name: "IrishJobs", url: (r) => `https://www.irishjobs.ie/jobs/${dash(r)}` }],
+    UK: [{ name: "Indeed UK", url: indeed("uk") }, { name: "Reed", url: (r, l) => `https://www.reed.co.uk/jobs/${dash(r)}-jobs-in-${dash(l)}` }, { name: "Totaljobs", url: (r) => `https://www.totaljobs.com/jobs/${dash(r)}` }],
+    ES: [{ name: "InfoJobs", url: (r) => `https://www.infojobs.net/jobsearch/search-results/list.xhtml?keyword=${q(r)}` }, { name: "Indeed Spain", url: indeed("es") }],
+    IT: [{ name: "Indeed Italy", url: indeed("it") }, { name: "InfoJobs Italia", url: (r) => `https://www.infojobs.it/offerte-lavoro/${dash(r)}` }],
+    PT: [{ name: "Indeed Portugal", url: indeed("pt") }, { name: "NetEmpregos", url: (r) => `https://www.net-empregos.com/pesquisa-empregos.asp?chaves=${q(r)}` }],
+    PL: [{ name: "Pracuj.pl", url: (r) => `https://www.pracuj.pl/praca/${q(r)};kw` }, { name: "Indeed Poland", url: indeed("pl") }],
+    EE: [{ name: "CV Keskus", url: (r) => `https://www.cvkeskus.ee/toopakkumised?op=search&search%5Bkeyword%5D=${q(r)}` }, { name: "CV.ee", url: (r) => `https://cv.ee/en/search?keywords%5B0%5D=${q(r)}` }],
+    EU: [{ name: "Indeed (worldwide)", url: (r, l) => `https://www.indeed.com/jobs?q=${q(r)}&l=${q(l)}` }],
+  };
+
+  /* ---------- interview banks ---------- */
+  CH.BEHAVIOURAL = [
+    ["Tell me about a time you had to meet a tight deadline.", "Delivery under pressure"],
+    ["Describe a conflict with a colleague and how you resolved it.", "Collaboration"],
+    ["Tell me about a mistake you made and what you learned.", "Ownership"],
+    ["Give an example of when you improved a process.", "Initiative"],
+    ["Describe a situation where you had to learn something new quickly.", "Learning agility"],
+    ["Tell me about a time you explained something complex to a non-expert.", "Communication"],
+  ];
+  CH.ASK_THEM = [
+    "What would success look like in the first 3 months?",
+    "What is the biggest challenge the team is facing right now?",
+    "How does the team share feedback and learn from each other?",
+    "Which tools and processes does the team use day to day?",
+    "What are the next steps in the hiring process, and when can I expect to hear back?",
+  ];
 })();
 
 </script>
@@ -928,7 +1080,7 @@ Nice to have: dbt, Excel (advanced), Google Analytics, basic statistics.`,
     if (/right to work|work permit|eligib|residence permit|visa/i.test(job.text || "") && !b.workAuth) warnings.push("The ad mentions right to work. Add your work authorization status.");
 
     const score = checks.reduce((a, c) => a + c.pts, 0);
-    return { score, checks, matched, missing, keywords: kws, warnings, words };
+    return { score, checks, matched, missing, keywords: kws, warnings, words, fit: Math.round(kwRatio * 100) };
   };
 
   /* ---------- cover letter draft (no AI) ---------- */
@@ -952,6 +1104,116 @@ Nice to have: dbt, Excel (advanced), Google Analytics, basic statistics.`,
 
   CH.lines = lines;
   CH.list = list;
+})();
+
+/* ---------- interview coach, CV text import, pipeline scoring ---------- */
+(function () {
+  const CH = window.CH;
+
+  CH.interviewQuestions = function (r, job, settings) {
+    const a = CH.analyze(r, job, settings || {});
+    const company = (job.company || "the company").replace(/\s*\(example\)/i, "");
+    const title = job.title || "this role";
+    const country = (CH.COUNTRIES[(settings || {}).country] || CH.COUNTRIES.EU).name;
+    const out = [];
+    const add = (cat, q, tip) => out.push({ cat, q, tip });
+    add("Opening", "Tell me about yourself.", `60–90 seconds: present (${r.basics.headline || "who you are"}), past (1–2 proof points with numbers), future (why ${title} at ${company}).`);
+    add("Motivation", `Why do you want to work at ${company}?`, "Name one specific product, value or project of theirs and connect it to something you have done.");
+    add("Motivation", `Why are you a good fit for the ${title} role?`, `Pick the 3 requirements you match best: ${a.matched.filter((k) => k.kind !== "word").slice(0, 3).map((k) => CH.pretty(k.term)).join(", ") || "the top requirements"}. Give one example for each.`);
+    if (r.basics.location && !r.basics.location.toLowerCase().includes(country.toLowerCase().split(" ")[0]) && country.indexOf("Europe") < 0)
+      add("Motivation", `Why do you want to move to / work in ${country}?`, "Show commitment: language learning, a connection to the country, long-term plans.");
+    a.matched.filter((k) => k.kind === "skill").slice(0, 4).forEach((k) =>
+      add("Role & skills", `Walk me through a project where you used ${CH.pretty(k.term)}.`, "Use STAR. Name the tool, the size of the data/problem and the measurable result."));
+    a.missing.filter((k) => k.required && k.kind !== "word").slice(0, 3).forEach((k) =>
+      add("Gap", `This role needs ${CH.pretty(k.term)}. What is your experience with it?`, "Be honest. Show the closest thing you have done and a concrete plan to learn it (course, project, timeline)."));
+    r.experience.flatMap((e) => (e.bullets || []).filter(CH.hasMetric).slice(0, 1).map((b) => [e, b])).slice(0, 3).forEach(([e, b]) =>
+      add("Your CV", `At ${e.company} you wrote: “${b}”. How exactly did you achieve that?`, "Expect follow-ups on numbers. Know the before/after, your exact part and what you would do differently."));
+    CH.BEHAVIOURAL.forEach(([q, comp]) => add("Behavioural", q, `They test: ${comp}. Answer in STAR (Situation, Task, Action, Result), about 2 minutes.`));
+    a.keywords.filter((k) => k.kind === "language").forEach((k) =>
+      add("Practical", `The ad mentions ${CH.pretty(k.term)}. How would you rate your level?`, "Give your CEFR level honestly and what you are doing to improve. Be ready to answer one question in that language."));
+    if (/right to work|permit|visa|eligib/i.test(job.text || "") || r.basics.workAuth) add("Practical", "Do you have the right to work here?", r.basics.workAuth ? `Short and clear: “${r.basics.workAuth}.”` : "State your permit status clearly and whether you need sponsorship.");
+    add("Practical", "What are your salary expectations?", "Research the local range first (union tables, Glassdoor, Palkkadata in Finland). Give a range and say whether it is gross monthly or annual.");
+    add("Practical", "When could you start?", "Give a concrete date or notice period.");
+    add("Closing", "Do you have any questions for us?", "Always ask 2–3. Ideas: " + CH.ASK_THEM.slice(0, 3).join(" · "));
+    return out;
+  };
+
+  /* Heuristic import of an old CV / LinkedIn text into the profile form (no AI). */
+  const HEAD = {
+    summary: /^(summary|profile|professional summary|about( me)?|objective|profiili|tiivistelmä|profil|kurzprofil|perfil|profilo)\b/i,
+    experience: /^(work experience|experience|employment( history)?|professional experience|work history|työkokemus|berufserfahrung|arbetslivserfarenhet|expérience|experiencia|esperienza|werkervaring|doświadczenie)/i,
+    education: /^(education|academic|qualifications|koulutus|ausbildung|bildung|utbildning|formation|formación|istruzione|opleiding|wykształcenie)/i,
+    skills: /^(skills|technical skills|core skills|competenc|key skills|taidot|osaaminen|kenntnisse|fähigkeiten|kompetenser|compétences|habilidades|competenze|vaardigheden|umiejętności)/i,
+    languages: /^(languages?|kielitaito|kielet|sprachen|språk|langues|idiomas|lingue|talen|języki)/i,
+    certifications: /^(certifications?|certificates|licenses|licences|courses|sertifikaatit|zertifikate)/i,
+    projects: /^(projects?|projektit|projekte|projets|proyectos|progetti)/i,
+    interests: /^(interests|hobbies|harrastukset|interessen|intressen)/i,
+  };
+  const DATE_RANGE = /((\d{1,2}[\/.]\d{4}|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.? \d{4}|\b(19|20)\d{2})\s*[-–—to]+\s*(\d{1,2}[\/.]\d{4}|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.? \d{4}|\b(19|20)\d{2}|present|current|now|today|nykyään|heute|jatkuu))/i;
+
+  CH.importText = function (text) {
+    const raw = String(text || "").replace(/\r/g, "");
+    const L = raw.split("\n").map((l) => l.trim()).filter(Boolean);
+    const p = { basics: { name: "", headline: "", email: "", phone: "", location: "", linkedin: "", website: "", workAuth: "", nationality: "", dob: "" }, summary: "", experience: [], education: [], skills: "", languages: "", certifications: "", projects: [], interests: "", rawResume: raw };
+    const email = raw.match(/[\w.+-]+@[\w-]+\.[\w.-]+/); if (email) p.basics.email = email[0];
+    const phone = raw.match(/(\+\d{1,3}[\s-]?)?(\(?\d{2,4}\)?[\s-]?)\d{3,4}[\s-]?\d{3,4}/); if (phone) p.basics.phone = phone[0].trim();
+    const li = raw.match(/(https?:\/\/)?(www\.)?linkedin\.com\/in\/[\w\-%]+/i); if (li) p.basics.linkedin = li[0].replace(/^https?:\/\/(www\.)?/, "");
+    const web = raw.replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, " ").match(/(https?:\/\/)?(www\.)?(github\.com|gitlab\.com|behance\.net|[\w-]+\.(dev|io|me|fi|com))\/?[\w\-/.]*/i);
+    if (web && !/linkedin|@/.test(web[0])) p.basics.website = web[0].replace(/^https?:\/\/(www\.)?/, "");
+    const nameLine = L.find((l) => /^[\p{Lu}][\p{L}'’.-]+(\s+[\p{Lu}][\p{L}'’.-]+){1,3}$/u.test(l) && !HEAD.summary.test(l));
+    if (nameLine) p.basics.name = nameLine;
+    const ni = L.indexOf(nameLine);
+    if (ni >= 0 && L[ni + 1] && L[ni + 1].length < 70 && !/@|\d{4}/.test(L[ni + 1])) p.basics.headline = L[ni + 1];
+    const loc = raw.match(/\b([A-ZÄÖÅ][a-zäöåüé]+),\s*(Finland|Sweden|Norway|Denmark|Germany|Austria|Switzerland|Netherlands|Belgium|France|Ireland|United Kingdom|UK|Spain|Italy|Portugal|Poland|Estonia|Suomi)\b/);
+    if (loc) p.basics.location = loc[0];
+
+    // split into sections
+    let cur = null; const sec = {};
+    L.forEach((l) => {
+      const key = l.length < 40 ? Object.keys(HEAD).find((k) => HEAD[k].test(l.replace(/[:•]/g, "").trim())) : null;
+      if (key) { cur = key; sec[key] = sec[key] || []; return; }
+      if (cur) sec[cur].push(l);
+    });
+    if (sec.summary) p.summary = sec.summary.join(" ").slice(0, 900);
+    if (sec.skills) p.skills = sec.skills.map((l) => l.replace(/^[-•*·▪]\s*/, "")).join("\n");
+    if (sec.languages) p.languages = sec.languages.map((l) => l.replace(/^[-•*·▪]\s*/, "")).join("\n");
+    if (sec.certifications) p.certifications = sec.certifications.map((l) => l.replace(/^[-•*·▪]\s*/, "")).join("\n");
+    if (sec.interests) p.interests = sec.interests.join(", ");
+    const entries = (lines, kind) => {
+      const out = []; let e = null;
+      lines.forEach((l, i) => {
+        const m = l.match(DATE_RANGE);
+        const isBullet = /^[-•*·▪●]/.test(l);
+        if (m && !isBullet) {
+          const parts = m[0].split(/\s*[-–—]\s*|\s+to\s+/i);
+          const head = l.replace(m[0], "").replace(/[|,–—-]\s*$/, "").trim();
+          const prev = lines[i - 1] && !lines[i - 1].match(DATE_RANGE) && !/^[-•*·▪●]/.test(lines[i - 1]) && (!e || e._lines > 0) ? lines[i - 1] : "";
+          const [a, b] = (head || prev).split(/\s*,\s+|\s+(?:at|@|\||–|—)\s+/);
+          e = kind === "exp" ? { title: a || "", company: b || "", location: "", start: parts[0] || "", end: parts[1] || "", bullets: "", _lines: 0 } : { degree: a || "", school: b || "", location: "", start: parts[0] || "", end: parts[1] || "", details: "", _lines: 0 };
+          if (prev && e && out.length && out[out.length - 1].bullets) out[out.length - 1].bullets = out[out.length - 1].bullets.replace(new RegExp("\\n?" + prev.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"), "");
+          out.push(e);
+        } else if (e) {
+          const t = l.replace(/^[-•*·▪●]\s*/, "");
+          if (kind === "exp") e.bullets += (e.bullets ? "\n" : "") + t; else e.details += (e.details ? "; " : "") + t;
+          e._lines++;
+        }
+      });
+      out.forEach((x) => delete x._lines);
+      return out;
+    };
+    if (sec.experience) p.experience = entries(sec.experience, "exp");
+    if (sec.education) p.education = entries(sec.education, "edu");
+    if (sec.projects) p.projects = [{ name: (sec.projects[0] || "").replace(/^[-•*·▪]\s*/, ""), link: "", bullets: sec.projects.slice(1).map((l) => l.replace(/^[-•*·▪]\s*/, "")).join("\n") }];
+    if (!p.experience.length) p.experience = [{ title: "", company: "", location: "", start: "", end: "", bullets: "" }];
+    if (!p.education.length) p.education = [{ degree: "", school: "", location: "", start: "", end: "", details: "" }];
+    const found = ["name", "email", "phone"].filter((k) => p.basics[k]).length + Object.keys(sec).length;
+    return { profile: p, found, sections: Object.keys(sec) };
+  };
+
+  CH.matchScore = function (profile, job, settings) {
+    if (!job || (job.text || "").length < 50) return null;
+    return CH.analyze(CH.toResume(profile), job, settings || {}).fit;
+  };
 })();
 
 </script>
@@ -1082,6 +1344,54 @@ ${outputSpec}`;
       interests: r.interests || "",
       rawResume: (prev && prev.rawResume) || "",
     };
+  };
+})();
+
+/* ---------- AI toolkit: each tool works with Claude in-page or any chat AI via copy/paste ---------- */
+(function () {
+  const CH = window.CH;
+  const ctx = (s) => {
+    const r = CH.toResume(s.profile);
+    const country = (CH.COUNTRIES[s.settings.country] || CH.COUNTRIES.EU).name;
+    const jobBlock = (s.job.text || "").trim() ? `TARGET JOB: ${s.job.title || ""} at ${s.job.company || ""} (${country})\nJob ad:\n"""\n${s.job.text.trim().slice(0, 9000)}\n"""` : `TARGET COUNTRY: ${country}`;
+    return { r, country, jobBlock, cv: JSON.stringify(r), lang: CH.LANG_NAMES[s.settings.lang] || "English" };
+  };
+  const TRUTH = "Use only facts from the candidate data. Never invent employers, dates, skills, tools or numbers.";
+  const JSON_OUT = "Return ONLY one JSON object in a single ```json code block, in exactly this shape:\n" + CH.SCHEMA_EXAMPLE;
+
+  CH.TOOLS = [
+    { id: "import", label: "Import my old CV / LinkedIn", out: "json", desc: "Turns the text in “Old CV or extra notes” (paste your CV or your LinkedIn profile, or upload a file) into a clean, structured profile.",
+      build: (s) => `You are a precise CV parser. Convert the candidate's text below into structured data. Keep every fact, fix obvious typos, rewrite nothing else. Dates as MM/YYYY when the month is known, otherwise YYYY. Split each job's duties/achievements into separate bullets. Languages with CEFR level if stated.\n\nCANDIDATE TEXT:\n"""\n${(s.profile.rawResume || "").slice(0, 15000) || "(empty: ask the user to paste their CV)"}\n"""\n\n${JSON_OUT}` },
+    { id: "translate", label: "Translate my CV", out: "json", desc: "Translates all CV content into the CV language chosen in step 1, using natural, professional local phrasing.",
+      build: (s) => { const c = ctx(s); return `Translate this CV into ${c.lang} for a job in ${c.country}. Use natural professional phrasing a local recruiter expects, keep tool names, company names and proper nouns unchanged, keep dates. ${TRUTH}\n\nCV:\n${c.cv}\n\n${JSON_OUT}`; } },
+    { id: "cover", label: "Cover letter", out: "cover", desc: "A specific, non-generic cover letter (max 250 words) in the CV language.",
+      build: (s) => { const c = ctx(s); return `Write a cover letter in ${c.lang} for this job. Max 250 words, 3–4 short paragraphs: a hook naming the role and one strong proof point, 2 achievements mapped to the top requirements (mirror the ad's keywords), why this company specifically, a confident close. Tone suited to ${c.country}. No clichés ("I am writing to apply", "team player", "passionate"). ${TRUTH} If something specific about the company is needed but unknown, write [one specific thing about the company]. Return only the letter.\n\n${c.jobBlock}\n\nCANDIDATE CV:\n${c.cv}`; } },
+    { id: "interview", label: "Interview questions + model answers", out: "text", desc: "The 12 most likely questions for this job with model STAR answers built from your real CV.",
+      build: (s) => { const c = ctx(s); return `You are a senior hiring manager in ${c.country}. Predict the 12 most likely interview questions for this job (mix: motivation, technical/role, behavioural, the candidate's gaps, practical such as salary and right to work). For each give: the question, what the interviewer is really testing, and a model answer in first person using STAR, built ONLY from the candidate's real experience (about 120 words). Flag gaps honestly and show how to handle them. End with 5 smart questions the candidate should ask. ${TRUTH}\n\n${c.jobBlock}\n\nCANDIDATE CV:\n${c.cv}`; } },
+    { id: "linkedin", label: "LinkedIn headline & About", out: "text", desc: "A keyword-rich LinkedIn headline, About section and top skills, so recruiters find you.",
+      build: (s) => { const c = ctx(s); return `Optimise this candidate's LinkedIn profile for recruiters searching for roles like the target job. Give: 3 headline options (max 220 characters, keyword-rich), an About section (max 1,800 characters, first person, hook in the first 2 lines, keywords, a call to action), the 10 best skills to list, and 3 quick wins. ${TRUTH}\n\n${c.jobBlock}\n\nCANDIDATE CV:\n${c.cv}`; } },
+    { id: "recruiter", label: "Message to recruiter", out: "text", desc: "A short LinkedIn message or email to the recruiter or hiring manager.",
+      build: (s) => { const c = ctx(s); return `Write 2 versions of a short message (max 90 words each) from the candidate to the recruiter or hiring manager for this job: one LinkedIn connection note (max 280 characters) and one email with subject line. Specific, polite, one proof point, clear ask. Language: ${c.lang}. ${TRUTH}\n\n${c.jobBlock}\n\nCANDIDATE CV:\n${c.cv}`; } },
+    { id: "followup", label: "Follow-up & thank-you emails", out: "text", desc: "A follow-up one week after applying, and a thank-you note after an interview.",
+      build: (s) => { const c = ctx(s); return `Write (1) a polite follow-up email 7–10 days after applying with no reply, and (2) a thank-you email to send within 24 hours after an interview that references one topic discussed as [topic we discussed]. Each max 120 words with a subject line, in ${c.lang}, tone suited to ${c.country}.\n\n${c.jobBlock}\n\nCANDIDATE: ${c.r.basics.name || ""}, ${c.r.basics.headline || ""}`; } },
+    { id: "gap", label: "Skill-gap plan (30 days)", out: "text", desc: "What you are missing for this job and a free 30-day plan to close the gap.",
+      build: (s) => { const c = ctx(s); return `Compare the candidate with the job. List: strengths to emphasise, missing must-haves, missing nice-to-haves. Then a realistic 30-day plan using free resources (official docs, free courses, a small portfolio project that proves the skill, with a one-line CV bullet the candidate could honestly add once done). Be specific and honest.\n\n${c.jobBlock}\n\nCANDIDATE CV:\n${c.cv}`; } },
+  ];
+
+  CH.mockInterviewIntro = function (s) {
+    const r = CH.toResume(s.profile);
+    const country = (CH.COUNTRIES[s.settings.country] || CH.COUNTRIES.EU).name;
+    return `You are a realistic, friendly but demanding interviewer for the job below in ${country}. Run a mock interview with me.
+Rules: ask ONE question at a time and wait for my answer. After each answer, give feedback in this format:
+Score: x/5 · What worked: … · Improve: … · Stronger version: (2–3 sentences using only facts from my CV)
+Then ask the next question. Mix motivation, role-specific, behavioural (STAR) and one question about my biggest gap. After 6 questions, give a final verdict: overall score /10, top 3 strengths, top 3 fixes, and whether I would move to the next round.
+Start now with a one-line greeting and your first question.
+
+JOB: ${s.job.title || ""} at ${s.job.company || ""}
+${(s.job.text || "").trim().slice(0, 7000)}
+
+MY CV:
+${JSON.stringify(r)}`;
   };
 })();
 
@@ -1443,6 +1753,87 @@ ${outputSpec}`;
 
 </script>
 <script>
+/* ChaLLengErs — read an existing CV file (PDF, DOCX, TXT) into plain text, in the browser. */
+(function () {
+  const CH = (window.CH = window.CH || {});
+
+  async function inflateRaw(u8) {
+    const ds = new DecompressionStream("deflate-raw");
+    const stream = new Blob([u8]).stream().pipeThrough(ds);
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+
+  async function unzipEntry(buf, wanted) {
+    const u8 = new Uint8Array(buf), dv = new DataView(buf);
+    let eocd = -1;
+    for (let i = u8.length - 22; i >= Math.max(0, u8.length - 66000); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) throw new Error("Not a valid .docx file");
+    let p = dv.getUint32(eocd + 16, true);
+    const count = dv.getUint16(eocd + 10, true);
+    const dec = new TextDecoder();
+    for (let n = 0; n < count; n++) {
+      const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
+      const nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+      const name = dec.decode(u8.subarray(p + 46, p + 46 + nlen));
+      if (name === wanted) {
+        const lnlen = dv.getUint16(off + 26, true), lelen = dv.getUint16(off + 28, true);
+        const data = u8.subarray(off + 30 + lnlen + lelen, off + 30 + lnlen + lelen + csize);
+        return dec.decode(method === 0 ? data : await inflateRaw(data));
+      }
+      p += 46 + nlen + elen + clen;
+    }
+    throw new Error("No document text found in this .docx");
+  }
+
+  async function docxText(buf) {
+    if (typeof DecompressionStream === "undefined") throw new Error("This browser can't read .docx files. Paste the text instead.");
+    const xml = await unzipEntry(buf, "word/document.xml");
+    return xml
+      .replace(/<w:tab\/>/g, "\t").replace(/<w:br\/>/g, "\n").replace(/<\/w:p>/g, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&")
+      .replace(/\n{3,}/g, "\n\n").trim();
+  }
+
+  const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+  function loadScript(src) {
+    return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => rej(new Error("Could not load the PDF reader (are you offline?). Paste the text instead.")); document.head.appendChild(s); });
+  }
+  async function pdfText(buf) {
+    if (!window.pdfjsLib) {
+      await loadScript(PDFJS + "pdf.worker.min.js"); // runs the parser on the page (no separate worker needed)
+      await loadScript(PDFJS + "pdf.min.js");
+    }
+    const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(buf), isEvalSupported: false }).promise;
+    const out = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const tc = await page.getTextContent();
+      let line = "", lastY = null;
+      tc.items.forEach((it) => {
+        const y = Math.round(it.transform[5]);
+        if (lastY !== null && Math.abs(y - lastY) > 2) { out.push(line.trim()); line = ""; }
+        line += it.str + (it.hasEOL ? "" : "");
+        lastY = y;
+      });
+      if (line.trim()) out.push(line.trim());
+      out.push("");
+    }
+    return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
+
+  CH.readCVFile = async function (file) {
+    const name = (file.name || "").toLowerCase();
+    const buf = await file.arrayBuffer();
+    if (name.endsWith(".docx")) return docxText(buf);
+    if (name.endsWith(".pdf") || file.type === "application/pdf") return pdfText(buf);
+    if (name.endsWith(".doc")) throw new Error("Old .doc files can't be read. Save it as .docx or PDF, or paste the text.");
+    return new TextDecoder().decode(buf);
+  };
+})();
+
+</script>
+<script>
 /* ChaLLengErs — UI controller. Everything runs in the browser; nothing is sent anywhere unless you use an AI. */
 (function () {
   const CH = window.CH;
@@ -1456,13 +1847,15 @@ ${outputSpec}`;
     job: clone(CH.SAMPLE_JOB),
     profile: clone(CH.SAMPLE_PROFILE),
     settings: { country: "FI", lang: "en", template: "modern", accent: "#1f3a5f", order: "auto", showPhoto: false, photo: "", showDob: false, showNationality: false, gdpr: false, coverLetter: true },
-    instructions: "", output: "json", cover: "", tracker: [], isExample: true, tab: "job",
+    instructions: "", output: "json", cover: "", tracker: [], pipeline: [], stories: [], toolOut: "", tool: "import", isExample: true, tab: "job",
   });
   let state = defaults();
   let undoStack = null;
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || "null");
     if (saved && saved.profile) state = { ...defaults(), ...saved, settings: { ...defaults().settings, ...saved.settings } };
+    // migrate the old simple tracker into the pipeline
+    if (state.tracker && state.tracker.length) { state.pipeline = [...state.tracker.map((t) => ({ id: "j" + Math.random().toString(36).slice(2, 9), title: t.role, company: t.company, status: t.status, date: t.date, text: "", url: "" })), ...(state.pipeline || [])]; state.tracker = []; }
   } catch (e) { /* storage unavailable: start with defaults */ }
 
   let saveTimer;
@@ -1471,10 +1864,13 @@ ${outputSpec}`;
   /* ---------- platform: claude.ai viewer vs normal browser ---------- */
   const P = { downloads: null, sample: null, inClaude: !!(window.claude && window.claude.use) };
   async function initPlatform() {
-    if (!P.inClaude) { $("#bookmarkletBox").hidden = false; buildBookmarklet(); return; }
+    if (!P.inClaude) { $("#bookmarkletBox").hidden = false; $("#extZip").hidden = location.protocol === "file:"; buildBookmarklet(); renderToolHint(); return; }
     try { P.downloads = await window.claude.use("downloads"); } catch (e) { P.downloads = null; }
     try { P.sample = await window.claude.use("sample"); } catch (e) { P.sample = null; }
     $("#claudeHere").hidden = !P.sample;
+    $("#toolRun").hidden = !P.sample;
+    $("#mockStart").hidden = !P.sample;
+    renderToolHint();
   }
   async function saveFile(name, data, mime) {
     if (P.downloads) {
@@ -1513,6 +1909,8 @@ ${outputSpec}`;
     $$(".panel").forEach((p) => (p.hidden = p.dataset.panel !== name));
     if (name === "ai") $("#promptBox").value = currentPrompt();
     if (name === "apply") renderKit();
+    if (name === "interview") renderInterview();
+    if (name === "jobs") renderJobs();
     save();
   }
   $$(".tab").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
@@ -1585,9 +1983,9 @@ ${outputSpec}`;
   }));
 
   $("#startBlank").addEventListener("click", () => {
-    const keepTracker = state.tracker;
+    const keep = { pipeline: state.pipeline, stories: state.stories };
     state = defaults();
-    state.tracker = keepTracker;
+    Object.assign(state, keep);
     state.isExample = false;
     state.job = { title: "", company: "", text: "" };
     state.profile = { basics: { name: "", headline: "", email: "", phone: "", location: "", linkedin: "", website: "", workAuth: "", nationality: "", dob: "" }, summary: "", experience: [clone(blank.experience)], education: [clone(blank.education)], skills: "", languages: "", certifications: "", projects: [], interests: "", rawResume: "" };
@@ -1811,38 +2209,8 @@ ${outputSpec}`;
       btn.addEventListener("click", () => copy(String(value), label));
       kit.appendChild(btn);
     });
-    renderTracker();
-  }
-  const STATUSES = ["Saved", "Applied", "Interview", "Offer", "Rejected"];
-  function renderTracker() {
-    const list = $("#trackList");
-    if (!state.tracker.length) { list.innerHTML = '<p class="empty">No applications yet. Add the jobs you apply to and keep track of where each one stands.</p>'; return; }
-    list.innerHTML = "";
-    state.tracker.forEach((t, i) => {
-      const row = document.createElement("div");
-      row.className = "track-row";
-      row.innerHTML = `<div><strong>${CH.escapeHTML(t.company)}</strong> · ${CH.escapeHTML(t.role)} <span class="date">${CH.escapeHTML(t.date)}</span></div>`;
-      const sel = document.createElement("select");
-      sel.id = "track-status-" + i; sel.setAttribute("aria-label", "Status for " + t.company);
-      STATUSES.forEach((s) => sel.add(new Option(s, s, false, s === t.status)));
-      sel.addEventListener("change", () => { t.status = sel.value; save(); });
-      const del = document.createElement("button");
-      del.type = "button"; del.className = "btn tiny danger"; del.textContent = "Remove";
-      del.addEventListener("click", () => { state.tracker.splice(i, 1); save(); renderTracker(); });
-      row.append(sel, del); list.appendChild(row);
-    });
   }
   const today = () => new Date().toISOString().slice(0, 10);
-  $("#trackForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    state.tracker.unshift({ company: $("#tCompany").value.trim(), role: $("#tRole").value.trim(), status: $("#tStatus").value, date: today() });
-    $("#tCompany").value = ""; $("#tRole").value = ""; save(); renderTracker();
-  });
-  $("#trackCurrent").addEventListener("click", () => {
-    if (!state.job.company && !state.job.title) { toast("Add a job title or company in step 1 first"); return; }
-    state.tracker.unshift({ company: (state.job.company || "—").replace(/\s*\(example\)/i, ""), role: state.job.title || "—", status: "Applied", date: today() });
-    save(); renderTracker(); toast("Added to your applications");
-  });
 
   /* ---------- bookmarklet + incoming jobs (normal web hosting only) ---------- */
   function buildBookmarklet() {
@@ -1866,7 +2234,205 @@ ${outputSpec}`;
     }
   }
 
+  /* ---------- CV import (file / pasted text) ---------- */
+  function applyImported(profile, note) {
+    undoStack = clone(state.profile);
+    state.profile = profile; state.isExample = false;
+    fillForm(); render(); save();
+    $("#undoBtn").disabled = false;
+    $("#importNote").innerHTML = note;
+  }
+  $("#cvFile").addEventListener("change", async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    e.target.value = "";
+    $("#importNote").textContent = "Reading " + f.name + "…";
+    try {
+      const text = await CH.readCVFile(f);
+      if (text.trim().length < 40) throw new Error("No text found. Is it a scanned image? Paste the text instead.");
+      state.profile.rawResume = text; $("#rawResume").value = text; save();
+      parseNow();
+    } catch (err) { $("#importNote").textContent = err.message || "Could not read that file."; }
+  });
+  function parseNow() {
+    const text = state.profile.rawResume || "";
+    if (text.trim().length < 40) { toast("Paste your CV or LinkedIn text first"); return; }
+    const { profile, sections } = CH.importText(text);
+    applyImported(profile, `<strong>Form filled.</strong> Found: contact details${sections.length ? ", " + sections.map(CH.escapeHTML).join(", ") : ""}. Check each section${P.sample ? ", or click <em>Clean up with AI</em> for a perfect split" : ""}. <em>Undo</em> in step 3 restores your previous version.`);
+    toast("Form filled from your CV");
+  }
+  $("#parseText").addEventListener("click", parseNow);
+  $("#aiParse").addEventListener("click", () => { $("#toolSel").value = "import"; state.tool = "import"; renderToolHint(); showTab("ai"); $("#toolSel").scrollIntoView({ behavior: "smooth", block: "center" }); });
+
+  /* ---------- AI toolkit ---------- */
+  CH.TOOLS.forEach((t) => $("#toolSel").add(new Option(t.label, t.id)));
+  $("#toolSel").value = state.tool || "import";
+  $("#toolOut").value = state.toolOut || "";
+  const curTool = () => CH.TOOLS.find((t) => t.id === $("#toolSel").value) || CH.TOOLS[0];
+  function renderToolHint() {
+    const t = curTool();
+    $("#toolDesc").textContent = t.desc;
+    $("#toolHint").textContent = t.out === "json"
+      ? (P.sample ? "Run with Claude loads the result straight into your CV. With another AI: copy the prompt, then paste its answer in “Paste the AI's answer” above and click Load." : "Copy the prompt into any AI chat, then paste its answer in “Paste the AI's answer” above and click Load.")
+      : t.out === "cover" ? "The letter goes into the Cover letter box below." : "Copy the prompt into any AI chat and paste the answer here to keep it.";
+  }
+  $("#toolSel").addEventListener("change", () => { state.tool = $("#toolSel").value; renderToolHint(); save(); });
+  $("#toolOut").addEventListener("input", () => { state.toolOut = $("#toolOut").value; save(); });
+  const toolState = () => ({ profile: state.profile, job: state.job, settings: state.settings });
+  $("#toolCopy").addEventListener("click", () => {
+    const t = curTool();
+    if (t.id === "import" && !(state.profile.rawResume || "").trim()) { toast("Paste your CV or LinkedIn text in step 2 first"); showTab("you"); return; }
+    copy(t.build(toolState()), t.label + " prompt");
+  });
+  let toolCtl = null;
+  $("#toolRun").addEventListener("click", async () => {
+    if (!P.sample) return;
+    const t = curTool();
+    if (t.id === "import" && !(state.profile.rawResume || "").trim()) { toast("Paste your CV or LinkedIn text in step 2 first"); showTab("you"); return; }
+    const btn = $("#toolRun"); btn.disabled = true; btn.textContent = "Claude is working…";
+    const out = $("#toolOut"); out.value = "Thinking… (up to a minute)";
+    toolCtl = new AbortController();
+    try {
+      const { text } = await P.sample(t.build(toolState()), { modelTier: t.out === "json" ? "complex" : "default", signal: toolCtl.signal, onText: ({ text }) => { out.value = text; } });
+      if (t.out === "json") { importResult(text); if (t.id === "translate") toast("CV translated"); else toast("Imported into your CV"); out.value = "Done. Check the result in the preview and in step 2."; }
+      else if (t.out === "cover") { state.cover = text.trim(); $("#coverText").value = state.cover; out.value = "Cover letter written. See the Cover letter box below."; toast("Cover letter ready"); }
+      else { state.toolOut = text; toast("Done"); }
+      save();
+    } catch (e) { out.value = (e && SAMPLE_ERR[e.code]) || "Couldn't finish. Try again, or copy the prompt into another AI."; }
+    finally { btn.disabled = false; btn.textContent = "Run with Claude"; }
+  });
+  $("#toolOutCopy").addEventListener("click", () => copy($("#toolOut").value, "Result"));
+  $("#toolOutDl").addEventListener("click", () => saveFile("ChaLLengErs_" + curTool().id + ".txt", $("#toolOut").value || " ", "text/plain"));
+
+  /* ---------- interview coach ---------- */
+  function renderInterview() {
+    const qs = CH.interviewQuestions(currentResume(), state.job, state.settings);
+    $("#iqList").innerHTML = qs.map((q) => `<div class="iq-item"><span class="chip">${CH.escapeHTML(q.cat)}</span><span class="iq-q">${CH.escapeHTML(q.q)}</span><span class="iq-tip">${CH.escapeHTML(q.tip)}</span></div>`).join("");
+    renderStories();
+  }
+  function renderStories() {
+    const list = $("#starList"); list.innerHTML = "";
+    $("#starCount").textContent = state.stories.length ? `${state.stories.length} saved ${state.stories.length === 1 ? "story" : "stories"}` : "";
+    state.stories.forEach((st, i) => {
+      const d = document.createElement("div"); d.className = "story";
+      const t = document.createElement("div"); t.textContent = st;
+      const tools = document.createElement("div"); tools.className = "btnrow";
+      const c = document.createElement("button"); c.type = "button"; c.className = "btn tiny ghost"; c.textContent = "Copy"; c.onclick = () => copy(st, "Story");
+      const r = document.createElement("button"); r.type = "button"; r.className = "btn tiny danger"; r.textContent = "Remove"; r.onclick = () => { state.stories.splice(i, 1); save(); renderStories(); };
+      tools.append(c, r); d.append(t, tools); list.appendChild(d);
+    });
+  }
+  $("#starSave").addEventListener("click", () => {
+    const [S, T, A, R] = ["#starS", "#starT", "#starA", "#starR"].map((id) => $(id).value.trim());
+    if (!S && !A) { toast("Fill in at least Situation and Action"); return; }
+    const story = `Situation: ${S}\nTask: ${T}\nAction: ${A}\nResult: ${R}`;
+    state.stories.unshift(story);
+    ["#starS", "#starT", "#starA", "#starR"].forEach((id) => ($(id).value = ""));
+    if (!/\d/.test(R)) toast("Saved. Tip: add a number to the Result"); else toast("Story saved");
+    save(); renderStories();
+  });
+  $("#mockCopy").addEventListener("click", () => copy(CH.mockInterviewIntro(toolState()), "Mock-interview prompt"));
+  let mockTurns = [];
+  function renderChat() {
+    const chat = $("#mockChat"); chat.hidden = !mockTurns.length; chat.innerHTML = "";
+    mockTurns.slice(1).forEach((t) => { const m = document.createElement("div"); m.className = "msg " + (t.role === "user" ? "me" : "ai"); m.textContent = t.content; chat.appendChild(m); });
+    chat.scrollTop = chat.scrollHeight;
+  }
+  async function mockAsk() {
+    const chat = $("#mockChat");
+    const live = document.createElement("div"); live.className = "msg ai"; live.textContent = "…"; chat.hidden = false; chat.appendChild(live);
+    $("#mockSend").disabled = true;
+    try {
+      const { text } = await P.sample(mockTurns, { cache: false, onText: ({ text }) => { live.textContent = text; chat.scrollTop = chat.scrollHeight; } });
+      mockTurns.push({ role: "assistant", content: text });
+    } catch (e) { live.textContent = (e && SAMPLE_ERR[e.code]) || "The interviewer couldn't answer. Try again."; mockTurns.pop(); }
+    finally { $("#mockSend").disabled = false; renderChat(); }
+  }
+  $("#mockStart").addEventListener("click", () => {
+    if (!P.sample) return;
+    if ((state.job.text || "").trim().length < 50) { toast("Paste the job ad first (step 1)"); showTab("job"); return; }
+    mockTurns = [{ role: "user", content: CH.mockInterviewIntro(toolState()) }];
+    $("#mockInput").hidden = false; $("#mockStart").textContent = "Restart interview";
+    renderChat(); mockAsk();
+  });
+  $("#mockSend").addEventListener("click", () => {
+    const v = $("#mockAnswer").value.trim();
+    if (!v || !P.sample || !mockTurns.length) return;
+    mockTurns.push({ role: "user", content: v }); $("#mockAnswer").value = "";
+    renderChat(); mockAsk();
+  });
+
+  /* ---------- jobs: search + pipeline ---------- */
+  const STATUSES = ["Saved", "Applied", "Interview", "Offer", "Rejected"];
+  function renderBoards() {
+    const role = $("#findRole").value.trim() || state.job.title || state.profile.basics.headline || "";
+    const loc = $("#findLoc").value.trim() || (state.profile.basics.location || "").split(",")[0];
+    const boards = [...(CH.JOB_BOARDS[state.settings.country] || []), ...CH.JOB_BOARDS.ALL];
+    const box = $("#boards"); box.innerHTML = "";
+    boards.forEach((b) => { const a = document.createElement("a"); a.className = "btn ghost"; a.target = "_blank"; a.rel = "noopener"; a.href = b.url(role, loc); a.textContent = b.name + " ↗"; box.appendChild(a); });
+  }
+  $("#findRole").addEventListener("input", renderBoards);
+  $("#findLoc").addEventListener("input", renderBoards);
+  function addJob(j) {
+    state.pipeline.unshift({ id: "j" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), title: j.title || CH.guessJobTitle(j.text || "") || "Untitled job", company: (j.company || "").replace(/\s*\(example\)/i, ""), status: j.status || "Saved", date: today(), text: j.text || "", url: j.url || "" });
+    save();
+  }
+  function renderJobs() {
+    if (!$("#findRole").value) $("#findRole").placeholder = state.job.title || state.profile.basics.headline || "e.g. Data Analyst";
+    if (!$("#findLoc").value) $("#findLoc").placeholder = (state.profile.basics.location || "").split(",")[0] || "e.g. Helsinki";
+    renderBoards();
+    const rows = state.pipeline.map((j) => ({ j, score: CH.matchScore(state.profile, j, state.settings) }));
+    rows.sort((a, b) => (STATUSES.indexOf(a.j.status) >= 3) - (STATUSES.indexOf(b.j.status) >= 3) || (b.score ?? -1) - (a.score ?? -1));
+    const counts = STATUSES.map((st) => [st, state.pipeline.filter((j) => j.status === st).length]);
+    const scored = rows.filter((r) => r.score != null);
+    $("#pipeStats").innerHTML = state.pipeline.length ? counts.map(([st, n]) => `<span class="stat">${st} ${n}</span>`).join("") + (scored.length ? `<span class="stat">Avg fit ${Math.round(scored.reduce((a, r) => a + r.score, 0) / scored.length)}</span>` : "") : "";
+    const list = $("#pipeList"); list.innerHTML = "";
+    if (!rows.length) { list.innerHTML = '<p class="empty">No jobs yet. Add job ads here (or with the extension) and ChaLLengErs ranks them by how well your CV matches, so you apply where you have the best chance.</p>'; return; }
+    rows.forEach(({ j, score }) => {
+      const row = document.createElement("div"); row.className = "pipe-row";
+      const sc = document.createElement("div"); sc.className = "pipe-score " + (score == null ? "na" : score >= 70 ? "hi" : score >= 45 ? "mid" : "lo"); sc.textContent = score == null ? "–" : score; sc.title = score == null ? "Add the ad text to get a match score" : "Job fit: % of this job's keywords your CV covers";
+      const main = document.createElement("div"); main.className = "pipe-main";
+      const strong = document.createElement("strong"); strong.textContent = j.title + (j.company ? " · " + j.company : "");
+      const date = document.createElement("span"); date.className = "date"; date.textContent = j.date + (j.url ? " · " : "");
+      main.append(strong, date);
+      if (j.url && /^https?:/i.test(j.url)) { const a = document.createElement("a"); a.href = j.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = "open ad ↗"; a.className = "date"; main.appendChild(a); }
+      const tools = document.createElement("div"); tools.className = "pipe-tools";
+      const sel = document.createElement("select"); sel.id = "pipe-st-" + j.id; sel.setAttribute("aria-label", "Status");
+      STATUSES.forEach((st) => sel.add(new Option(st, st, false, st === j.status)));
+      sel.addEventListener("change", () => { j.status = sel.value; save(); renderJobs(); });
+      const tailor = document.createElement("button"); tailor.type = "button"; tailor.className = "btn tiny primary"; tailor.textContent = "Tailor CV";
+      tailor.disabled = !(j.text || "").trim();
+      tailor.addEventListener("click", () => { state.job = { title: j.title, company: j.company, text: j.text }; fillForm(); render(); save(); showTab("ai"); toast("Loaded " + j.title + ". Now tailor"); });
+      const del = document.createElement("button"); del.type = "button"; del.className = "btn tiny danger"; del.textContent = "Remove";
+      del.addEventListener("click", () => { state.pipeline = state.pipeline.filter((x) => x !== j); save(); renderJobs(); });
+      tools.append(sel, tailor, del);
+      row.append(sc, main, tools); list.appendChild(row);
+    });
+  }
+  $("#pAdd").addEventListener("click", () => {
+    const text = $("#pText").value.trim(), title = $("#pTitle").value.trim();
+    if (!text && !title) { toast("Add a title or paste the ad"); return; }
+    addJob({ title, company: $("#pCompany").value.trim(), text });
+    ["#pTitle", "#pCompany", "#pText"].forEach((id) => ($(id).value = ""));
+    renderJobs(); toast("Added to your pipeline");
+  });
+  $("#pAddCurrent").addEventListener("click", () => {
+    if (!(state.job.text || "").trim() && !state.job.title) { toast("Add a job in step 1 first"); return; }
+    addJob({ ...state.job, status: "Saved" }); renderJobs(); toast("Added to your pipeline");
+  });
+  function mergeInbox() {
+    try {
+      const inbox = JSON.parse(localStorage.getItem("challengers.inbox") || "[]");
+      if (!inbox.length) return;
+      localStorage.removeItem("challengers.inbox");
+      inbox.forEach((j) => addJob(j));
+      toast(inbox.length + " job(s) added from the extension");
+      if (state.tab === "jobs") renderJobs();
+    } catch (e) { /* ignore */ }
+  }
+  window.addEventListener("storage", (e) => { if (e.key === "challengers.inbox" && e.newValue) mergeInbox(); });
+
   /* ---------- boot ---------- */
+  mergeInbox();
   takeIncoming();
   fillForm();
   showTab(state.tab || "job");

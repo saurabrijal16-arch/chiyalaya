@@ -185,3 +185,54 @@ Nice to have: dbt, Excel (advanced), Google Analytics, basic statistics.`,
     rawResume: "",
   };
 })();
+
+/* ---------- job boards (search links only: no scraping) ---------- */
+(function () {
+  const CH = window.CH;
+  const q = encodeURIComponent;
+  const dash = (s) => String(s || "").trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "");
+  const indeed = (cc) => (role, loc) => `https://${cc}.indeed.com/jobs?q=${q(role)}&l=${q(loc)}`;
+  CH.JOB_BOARDS = {
+    ALL: [
+      { name: "LinkedIn Jobs", url: (r, l) => `https://www.linkedin.com/jobs/search/?keywords=${q(r)}&location=${q(l)}` },
+      { name: "EURES (EU job portal)", url: () => "https://europa.eu/eures/portal/jv-se/home" },
+      { name: "Glassdoor", url: (r) => `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${q(r)}` },
+      { name: "Google Jobs", url: (r, l) => `https://www.google.com/search?q=${q(r + " jobs " + l)}&ibp=htl;jobs` },
+    ],
+    FI: [{ name: "Duunitori", url: (r, l) => `https://duunitori.fi/tyopaikat?haku=${q(r)}&alue=${q(l)}` }, { name: "Indeed Finland", url: indeed("fi") }, { name: "Työmarkkinatori", url: (r) => `https://tyomarkkinatori.fi/henkiloasiakkaat/avoimet-tyopaikat?q=${q(r)}` }],
+    SE: [{ name: "Platsbanken", url: (r) => `https://arbetsformedlingen.se/platsbanken/annonser?q=${q(r)}` }, { name: "Indeed Sweden", url: indeed("se") }],
+    NO: [{ name: "FINN jobb", url: (r) => `https://www.finn.no/job/fulltime/search.html?q=${q(r)}` }, { name: "Indeed Norway", url: indeed("no") }],
+    DK: [{ name: "Jobindex", url: (r) => `https://www.jobindex.dk/jobsoegning?q=${q(r)}` }, { name: "Indeed Denmark", url: indeed("dk") }],
+    DE: [{ name: "StepStone", url: (r, l) => `https://www.stepstone.de/jobs/${dash(r)}/in-${dash(l)}` }, { name: "Indeed Germany", url: indeed("de") }, { name: "Arbeitsagentur", url: (r) => `https://www.arbeitsagentur.de/jobsuche/suche?was=${q(r)}` }],
+    AT: [{ name: "karriere.at", url: (r) => `https://www.karriere.at/jobs?keywords=${q(r)}` }, { name: "Indeed Austria", url: indeed("at") }],
+    CH: [{ name: "jobs.ch", url: (r) => `https://www.jobs.ch/en/vacancies/?term=${q(r)}` }, { name: "Indeed Switzerland", url: indeed("ch") }],
+    NL: [{ name: "Indeed Netherlands", url: indeed("nl") }, { name: "Nationale Vacaturebank", url: (r) => `https://www.nationalevacaturebank.nl/vacature/zoeken?query=${q(r)}` }],
+    BE: [{ name: "Indeed Belgium", url: indeed("be") }],
+    FR: [{ name: "Welcome to the Jungle", url: (r) => `https://www.welcometothejungle.com/fr/jobs?query=${q(r)}` }, { name: "Indeed France", url: indeed("fr") }, { name: "France Travail", url: (r) => `https://candidat.francetravail.fr/offres/recherche?motsCles=${q(r)}` }],
+    IE: [{ name: "Indeed Ireland", url: indeed("ie") }, { name: "IrishJobs", url: (r) => `https://www.irishjobs.ie/jobs/${dash(r)}` }],
+    UK: [{ name: "Indeed UK", url: indeed("uk") }, { name: "Reed", url: (r, l) => `https://www.reed.co.uk/jobs/${dash(r)}-jobs-in-${dash(l)}` }, { name: "Totaljobs", url: (r) => `https://www.totaljobs.com/jobs/${dash(r)}` }],
+    ES: [{ name: "InfoJobs", url: (r) => `https://www.infojobs.net/jobsearch/search-results/list.xhtml?keyword=${q(r)}` }, { name: "Indeed Spain", url: indeed("es") }],
+    IT: [{ name: "Indeed Italy", url: indeed("it") }, { name: "InfoJobs Italia", url: (r) => `https://www.infojobs.it/offerte-lavoro/${dash(r)}` }],
+    PT: [{ name: "Indeed Portugal", url: indeed("pt") }, { name: "NetEmpregos", url: (r) => `https://www.net-empregos.com/pesquisa-empregos.asp?chaves=${q(r)}` }],
+    PL: [{ name: "Pracuj.pl", url: (r) => `https://www.pracuj.pl/praca/${q(r)};kw` }, { name: "Indeed Poland", url: indeed("pl") }],
+    EE: [{ name: "CV Keskus", url: (r) => `https://www.cvkeskus.ee/toopakkumised?op=search&search%5Bkeyword%5D=${q(r)}` }, { name: "CV.ee", url: (r) => `https://cv.ee/en/search?keywords%5B0%5D=${q(r)}` }],
+    EU: [{ name: "Indeed (worldwide)", url: (r, l) => `https://www.indeed.com/jobs?q=${q(r)}&l=${q(l)}` }],
+  };
+
+  /* ---------- interview banks ---------- */
+  CH.BEHAVIOURAL = [
+    ["Tell me about a time you had to meet a tight deadline.", "Delivery under pressure"],
+    ["Describe a conflict with a colleague and how you resolved it.", "Collaboration"],
+    ["Tell me about a mistake you made and what you learned.", "Ownership"],
+    ["Give an example of when you improved a process.", "Initiative"],
+    ["Describe a situation where you had to learn something new quickly.", "Learning agility"],
+    ["Tell me about a time you explained something complex to a non-expert.", "Communication"],
+  ];
+  CH.ASK_THEM = [
+    "What would success look like in the first 3 months?",
+    "What is the biggest challenge the team is facing right now?",
+    "How does the team share feedback and learn from each other?",
+    "Which tools and processes does the team use day to day?",
+    "What are the next steps in the hiring process, and when can I expect to hear back?",
+  ];
+})();
